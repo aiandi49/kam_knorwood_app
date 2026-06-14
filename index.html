@@ -569,7 +569,7 @@
           </div>
           <div style="margin-bottom:10px">
             <label class="form-label">Phone</label>
-            <input type="tel" class="form-input" id="f-phone" placeholder="(520) 555-1234" autocomplete="tel" inputmode="tel" oninput="fmtPhone(this)">
+            <input type="tel" class="form-input" id="f-phone" placeholder="(520) 555-1234" autocomplete="off" inputmode="tel" oninput="fmtPhone(this)">
           </div>
           <div style="margin-bottom:14px">
             <label class="form-label">Notes</label>
@@ -644,7 +644,7 @@
 
           <div style="margin-bottom:14px">
             <label class="form-label">Min CAP Rate</label>
-            <input type="text" class="form-input" id="f-cap-rate" placeholder="e.g. 6%" inputmode="decimal" oninput="fmtCap(this)">
+            <input type="text" class="form-input" id="f-cap-rate" placeholder="e.g. 6%" inputmode="decimal" autocomplete="off" oninput="fmtCap(this)" onblur="fmtCapBlur(this)">
           </div>
 
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:22px;padding:12px;background:var(--paper);border-radius:8px;border:1px solid var(--rule)">
@@ -1061,8 +1061,14 @@ function fmtSF(el) {
 }
 
 function fmtCap(el) {
+  // strip everything except digits and dot, keep typing natural
   let v = el.value.replace(/[^0-9.]/g, '');
-  if (v && !el.value.includes('%')) el.value = v;
+  el.value = v;
+}
+function fmtCapBlur(el) {
+  // on blur, append % if there's a number
+  let v = el.value.replace(/[^0-9.]/g, '');
+  if (v) el.value = v + '%';
 }
 
 async function saveClient() {
