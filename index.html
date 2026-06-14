@@ -554,85 +554,110 @@
       <div id="dpanel-add" style="display:none">
         <div class="client-form visible" id="add-client-form">
           <div class="form-section-label">Contact Info</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-            <div>
-              <label class="form-label">Full Name *</label>
-              <input type="text" class="form-input" id="f-name" placeholder="Jane Smith">
-            </div>
-            <div>
-              <label class="form-label">Company</label>
-              <input type="text" class="form-input" id="f-company" placeholder="Acme Corp">
-            </div>
+
+          <div style="margin-bottom:10px">
+            <label class="form-label">Full Name *</label>
+            <input type="text" class="form-input" id="f-name" placeholder="Jane Smith" autocomplete="name">
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-            <div>
-              <label class="form-label">Email *</label>
-              <input type="email" class="form-input" id="f-email" placeholder="jane@example.com">
-            </div>
-            <div>
-              <label class="form-label">Phone</label>
-              <input type="tel" class="form-input" id="f-phone" placeholder="(520) 555-1234">
-            </div>
+          <div style="margin-bottom:10px">
+            <label class="form-label">Company</label>
+            <input type="text" class="form-input" id="f-company" placeholder="Acme Corp" autocomplete="organization">
+          </div>
+          <div style="margin-bottom:10px">
+            <label class="form-label">Email *</label>
+            <input type="email" class="form-input" id="f-email" placeholder="jane@example.com" autocomplete="email" inputmode="email">
+          </div>
+          <div style="margin-bottom:10px">
+            <label class="form-label">Phone</label>
+            <input type="tel" class="form-input" id="f-phone" placeholder="(520) 555-1234" autocomplete="tel" inputmode="tel" oninput="fmtPhone(this)">
           </div>
           <div style="margin-bottom:14px">
             <label class="form-label">Notes</label>
-            <textarea class="form-input" id="f-notes" rows="2" placeholder="Any notes about this client…" style="resize:vertical"></textarea>
+            <textarea class="form-input" id="f-notes" rows="3" placeholder="e.g. Looking to spend $2,500/month max, prefers south side…" style="resize:vertical"></textarea>
           </div>
 
           <div class="form-section-label" style="margin-top:4px">Search Parameters</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-            <div>
-              <label class="form-label">Property Type</label>
-              <input type="text" class="form-input" id="f-prop-type" placeholder="Industrial, Retail…">
-            </div>
-            <div>
-              <label class="form-label">Listing Type</label>
-              <select class="form-input" id="f-listing-type">
-                <option value="">Any</option>
-                <option>For Sale</option>
-                <option>For Lease</option>
-                <option>For Sale or Lease</option>
-              </select>
-            </div>
+
+          <div style="margin-bottom:10px">
+            <label class="form-label">Property Type</label>
+            <select class="form-input" id="f-prop-type">
+              <option value="">— Select type —</option>
+              <option>Industrial</option>
+              <option>Industrial / Manufacturing</option>
+              <option>Industrial / Warehouse</option>
+              <option>Industrial / Office</option>
+              <option>Retail</option>
+              <option>Retail / Industrial</option>
+              <option>Retail / Office / Industrial</option>
+              <option>Office</option>
+              <option>Mixed Use</option>
+              <option>Special Purpose</option>
+            </select>
           </div>
+          <div style="margin-bottom:10px">
+            <label class="form-label">Listing Type</label>
+            <select class="form-input" id="f-listing-type">
+              <option value="">Any</option>
+              <option>For Sale</option>
+              <option>For Lease</option>
+              <option>For Sale or Lease</option>
+            </select>
+          </div>
+
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
             <div>
               <label class="form-label">Price Min</label>
-              <input type="text" class="form-input" id="f-price-min" placeholder="$500,000">
+              <input type="text" class="form-input" id="f-price-min" placeholder="$500,000" inputmode="numeric" oninput="fmtPrice(this)">
             </div>
             <div>
               <label class="form-label">Price Max</label>
-              <input type="text" class="form-input" id="f-price-max" placeholder="$2,000,000">
+              <input type="text" class="form-input" id="f-price-max" placeholder="$2,000,000" inputmode="numeric" oninput="fmtPrice(this)">
             </div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
             <div>
               <label class="form-label">Size Min (SF)</label>
-              <input type="text" class="form-input" id="f-size-min" placeholder="2,000">
+              <input type="text" class="form-input" id="f-size-min" placeholder="2,000" inputmode="numeric" oninput="fmtSF(this)">
             </div>
             <div>
               <label class="form-label">Size Max (SF)</label>
-              <input type="text" class="form-input" id="f-size-max" placeholder="10,000">
+              <input type="text" class="form-input" id="f-size-max" placeholder="10,000" inputmode="numeric" oninput="fmtSF(this)">
             </div>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-            <div>
-              <label class="form-label">Location / Area</label>
-              <input type="text" class="form-input" id="f-location" placeholder="Tucson South Side">
-            </div>
-            <div>
-              <label class="form-label">Min CAP Rate</label>
-              <input type="text" class="form-input" id="f-cap-rate" placeholder="5%">
-            </div>
+
+          <div style="margin-bottom:10px">
+            <label class="form-label">Location / Area</label>
+            <select class="form-input" id="f-location">
+              <option value="">— Select area —</option>
+              <option>Tucson – South Side</option>
+              <option>Tucson – East Side</option>
+              <option>Tucson – West Side</option>
+              <option>Tucson – Central / Downtown</option>
+              <option>Tucson – North / Foothills</option>
+              <option>Tucson – Airport / Industrial Corridor</option>
+              <option>Tucson – Opportunity Zone Area</option>
+              <option>Marana</option>
+              <option>Sahuarita / Green Valley</option>
+              <option>Anywhere in Tucson</option>
+            </select>
           </div>
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px">
-            <input type="checkbox" id="f-opp-zone" style="width:15px;height:15px;accent-color:var(--gold)">
-            <label for="f-opp-zone" style="font-size:0.83rem;color:var(--ink-mid);cursor:pointer">Opportunity Zone only</label>
+
+          <div style="margin-bottom:14px">
+            <label class="form-label">Min CAP Rate</label>
+            <input type="text" class="form-input" id="f-cap-rate" placeholder="e.g. 6%" inputmode="decimal" oninput="fmtCap(this)">
+          </div>
+
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:22px;padding:12px;background:var(--paper);border-radius:8px;border:1px solid var(--rule)">
+            <input type="checkbox" id="f-opp-zone" style="width:18px;height:18px;accent-color:var(--gold);flex-shrink:0">
+            <label for="f-opp-zone" style="font-size:0.85rem;color:var(--ink-mid);cursor:pointer;line-height:1.3">
+              <strong style="color:var(--ink-dark)">Opportunity Zone only</strong><br>
+              <span style="font-size:0.78rem">Client wants properties in tax-advantaged Opportunity Zones</span>
+            </label>
           </div>
 
           <button class="btn-add-client" onclick="saveClient()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-            Save Client to Supabase
+            Save Client
           </button>
         </div>
       </div>
@@ -1002,6 +1027,44 @@ function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').repl
 // ═══════════════════════════════════════════════════════════════
 //  SAVE NEW CLIENT
 // ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+//  INPUT FORMATTERS
+// ═══════════════════════════════════════════════════════════════
+function fmtPhone(el) {
+  let v = el.value.replace(/\D/g, '').slice(0, 10);
+  if (v.length >= 7) v = '(' + v.slice(0,3) + ') ' + v.slice(3,6) + '-' + v.slice(6);
+  else if (v.length >= 4) v = '(' + v.slice(0,3) + ') ' + v.slice(3);
+  else if (v.length > 0) v = '(' + v;
+  el.value = v;
+}
+
+function parsePriceInput(raw) {
+  // accepts: 2m → 2000000, 500k → 500000, 1.5m → 1500000, plain numbers
+  const s = raw.replace(/[$,\s]/g, '').toLowerCase();
+  if (s.endsWith('m')) return Math.round(parseFloat(s) * 1_000_000);
+  if (s.endsWith('k')) return Math.round(parseFloat(s) * 1_000);
+  return parseInt(s.replace(/\D/g, ''), 10) || 0;
+}
+
+function fmtPrice(el) {
+  const raw = el.value.replace(/[$,]/g, '').toLowerCase();
+  // allow typing m/k suffix freely — only format when it's a plain number
+  if (/^[\d.]+$/.test(raw) && raw.length > 0) {
+    const n = parseInt(raw, 10);
+    if (!isNaN(n)) el.value = '$' + n.toLocaleString();
+  }
+}
+
+function fmtSF(el) {
+  const n = parseInt(el.value.replace(/,/g, ''), 10);
+  if (!isNaN(n)) el.value = n.toLocaleString();
+}
+
+function fmtCap(el) {
+  let v = el.value.replace(/[^0-9.]/g, '');
+  if (v && !el.value.includes('%')) el.value = v;
+}
+
 async function saveClient() {
   const name    = document.getElementById('f-name').value.trim();
   const email   = document.getElementById('f-email').value.trim();
