@@ -877,11 +877,9 @@ const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
 // ═══════════════════════════════════════════════════════════════
-//  RESEND CONFIG  — set your Resend API key here
-//  (For production, proxy through a Vercel/Netlify function)
+//  EMAIL CONFIG  — key lives in Vercel env vars, never in this file
 // ═══════════════════════════════════════════════════════════════
-const RESEND_API_KEY = 'YOUR_RESEND_API_KEY'; // ← paste key here
-const FROM_EMAIL     = 'kam@knorwoodcre.com';   // ← your verified Resend sender
+const FROM_EMAIL = 'kam@knorwoodcre.com';
 
 // ═══════════════════════════════════════════════════════════════
 //  STATE
@@ -1128,11 +1126,6 @@ async function sendEmails() {
   const body    = document.getElementById('e-body').value.trim();
   if (!subject || !body) { showToast('Subject and message are required.', true); return; }
 
-  if (RESEND_API_KEY === 'YOUR_RESEND_API_KEY') {
-    showToast('⚠ Add your Resend API key to enable sending.', true);
-    return;
-  }
-
   const btn = document.getElementById('send-email-btn');
   btn.textContent = `Sending to ${checked.length} client${checked.length>1?'s':''}…`;
   btn.disabled = true;
@@ -1145,16 +1138,12 @@ async function sendEmails() {
     const personalBody = body.replace(/\[Client Name\]/gi, clientName);
 
     try {
-      const res = await fetch('https://api.resend.com/emails', {
+      const res = await fetch('/api/send-email', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${RESEND_API_KEY}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          from: `Kam Norwood CRE <${FROM_EMAIL}>`,
-          to: [clientEmail],
-          reply_to: FROM_EMAIL,
+          to: clientEmail,
+          name: clientName,
           subject: subject,
           text: personalBody
         })
