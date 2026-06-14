@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kam Norwood — Property Portal</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --cream:    #F7F4EE;
+      --warm:     #EDE8DF;
+      --stone:    #C9BFA8;
+      --ink:      #1C1A17;
+      --ink-mid:  #4A4640;
+      --ink-mute: #8A837A;
+      --gold:     #B8963E;
+      --gold-lt:  #D4AC58;
+      --white:    #FFFFFF;
+      --border:   rgba(100,90,76,0.15);
+      --border-md:rgba(100,90,76,0.25);
+      --shadow-sm:0 2px 8px rgba(28,26,23,0.06);
+      --shadow-md:0 8px 32px rgba(28,26,23,0.10);
+      --r:        10px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--cream);
+      color: var(--ink);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 400;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(184,150,62,0.06) 0%, transparent 70%),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+    .page { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 0 24px 80px; }
+
+    /* HEADER */
+    header {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      align-items: center;
+      gap: 20px;
+      padding: 40px 0 36px;
+      border-bottom: 1px solid var(--border-md);
+      margin-bottom: 36px;
+      animation: fadeDown 0.7s ease both;
+    }
+    .agent-photo-placeholder {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      border: 3px solid var(--white);
+      box-shadow: var(--shadow-md);
+      background: linear-gradient(135deg, var(--stone) 0%, var(--ink-mid) 100%);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.8rem; font-weight: 600; color: var(--white);
+      letter-spacing: 0.02em;
+    }
+    .agent-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.55rem; font-weight: 600; color: var(--ink);
+      line-height: 1.1; letter-spacing: 0.01em;
+    }
+    .agent-title { font-size: 0.78rem; color: var(--ink-mute); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 3px; }
+
+    /* FILTER TABS */
+    .filter-tabs {
+      display: flex; gap: 8px; flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .filter-tab {
+      padding: 8px 18px;
+      border-radius: 100px;
+      border: 1px solid var(--border-md);
+      background: var(--white);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.8rem; font-weight: 500;
+      color: var(--ink-mid);
+      cursor: pointer; transition: all 0.18s;
+    }
+    .filter-tab:hover { border-color: var(--gold); color: var(--gold); }
+    .filter-tab.active { background: var(--ink); color: var(--white); border-color: var(--ink); }
+    .tab-kam.active { background: var(--gold); border-color: var(--gold); }
+    .tab-kam { border-color: var(--gold-lt); color: var(--gold); }
+
+    /* RESULTS COUNT */
+    .results-meta { font-size: 0.78rem; color: var(--ink-mute); margin-bottom: 16px; }
+    .results-meta strong { color: var(--ink); }
+
+    /* PROPERTY GRID */
+    .property-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    /* CARD */
+    .card {
+      background: var(--white);
+      border-radius: var(--r);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      animation: fadeUp 0.5s ease both;
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .is-kam-listing { border-color: rgba(184,150,62,0.35); }
+
+    /* CARD IMAGE */
+    .card-img { position: relative; height: 200px; overflow: hidden; background: var(--warm); }
+    .card-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .card-img-placeholder {
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--stone);
+    }
+    .card-img-placeholder svg { width: 48px; height: 48px; }
+    .badge-stack { position: absolute; top: 10px; left: 10px; display: flex; flex-direction: column; gap: 5px; }
+    .card-badge {
+      display: inline-block; padding: 3px 9px;
+      background: rgba(28,26,23,0.75); backdrop-filter: blur(4px);
+      color: var(--white); font-size: 0.65rem; font-weight: 500;
+      letter-spacing: 0.06em; text-transform: uppercase; border-radius: 100px;
+    }
+    .card-badge.opp { background: rgba(184,150,62,0.85); }
+    .kam-badge {
+      display: inline-block; padding: 3px 9px;
+      background: var(--gold); color: var(--white);
+      font-size: 0.65rem; font-weight: 600;
+      letter-spacing: 0.06em; text-transform: uppercase; border-radius: 100px;
+    }
+
+    /* GALLERY */
+    .gallery-wrap { position: relative; width: 100%; height: 100%; }
+    .gallery-wrap img { width: 100%; height: 100%; object-fit: cover; cursor: zoom-in; }
+    .gallery-btn {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      background: rgba(28,26,23,0.55); color: var(--white);
+      border: none; border-radius: 50%; width: 30px; height: 30px;
+      font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.2s;
+    }
+    .gallery-wrap:hover .gallery-btn { opacity: 1; }
+    .gallery-btn.prev { left: 8px; }
+    .gallery-btn.next { right: 8px; }
+    .gallery-counter {
+      position: absolute; bottom: 8px; right: 8px;
+      background: rgba(28,26,23,0.55); color: var(--white);
+      font-size: 0.65rem; padding: 2px 7px; border-radius: 100px;
+    }
+
+    /* CARD BODY */
+    .card-body { padding: 16px 18px; flex: 1; display: flex; flex-direction: column; gap: 6px; }
+    .listing-type-badge {
+      display: inline-block; padding: 2px 8px;
+      border-radius: 100px; font-size: 0.65rem; font-weight: 600;
+      letter-spacing: 0.05em; text-transform: uppercase;
+    }
+    .badge-sale { background: #EBF5EC; color: #2E7D32; }
+    .badge-lease { background: #E8F0FB; color: #1565C0; }
+    .badge-both { background: #FFF8E1; color: #F57F17; }
+    .card-price {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.3rem; font-weight: 600; color: var(--ink);
+      line-height: 1.2;
+    }
+    .card-address-1 { font-weight: 500; font-size: 0.9rem; color: var(--ink); }
+    .card-address-2 { font-size: 0.8rem; color: var(--ink-mute); }
+    .card-divider { height: 1px; background: var(--border); margin: 4px 0; }
+    .card-metrics { display: flex; flex-wrap: wrap; gap: 6px; font-size: 0.75rem; color: var(--ink-mid); }
+    .metric { display: flex; align-items: center; gap: 4px; }
+    .metric-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--gold); flex-shrink: 0; }
+
+    /* CARD ACTIONS */
+    .card-actions { display: flex; gap: 8px; margin-top: auto; padding-top: 10px; flex-wrap: wrap; }
+    .btn-flyer, .btn-crexi-card {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 6px 12px; border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.72rem; font-weight: 500;
+      text-decoration: none; cursor: pointer; transition: all 0.15s;
+    }
+    .btn-flyer { background: var(--cream); color: var(--ink-mid); border: 1px solid var(--border-md); }
+    .btn-flyer:hover { background: var(--warm); }
+    .btn-flyer.placeholder { opacity: 0.45; pointer-events: none; }
+    .btn-crexi-card { background: var(--ink); color: var(--white); border: 1px solid var(--ink); }
+    .btn-crexi-card:hover { background: var(--ink-mid); }
+    .btn-flyer svg, .btn-crexi-card svg { width: 12px; height: 12px; flex-shrink: 0; }
+
+    /* BROKER STRIP */
+    .broker-strip {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 18px;
+      border-top: 1px solid var(--border);
+      background: var(--cream);
+    }
+    .broker-initials {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--stone) 0%, var(--ink-mid) 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.9rem; font-weight: 600; color: var(--white);
+      flex-shrink: 0;
+    }
+    .broker-details { flex: 1; min-width: 0; }
+    .broker-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--stone); }
+    .broker-name { font-size: 0.78rem; font-weight: 500; color: var(--ink); }
+    .broker-meta { font-size: 0.7rem; color: var(--ink-mute); }
+    .broker-contact-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 5px 10px; border-radius: 6px;
+      background: transparent; border: 1px solid var(--border-md);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.7rem; font-weight: 500; color: var(--ink-mid);
+      text-decoration: none; transition: all 0.15s; flex-shrink: 0;
+    }
+    .broker-contact-btn:hover { background: var(--warm); }
+    .broker-contact-btn svg { width: 11px; height: 11px; }
+
+    /* NO RESULTS */
+    .no-results {
+      grid-column: 1/-1;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 60px 20px; gap: 14px; color: var(--stone);
+      font-size: 0.9rem; text-align: center;
+    }
+    .no-results svg { width: 40px; height: 40px; }
+
+    /* FOOTER */
+    footer {
+      text-align: center; padding: 40px 0 0;
+      border-top: 1px solid var(--border);
+      color: var(--ink-mute); font-size: 0.75rem;
+    }
+    .footer-brand { font-weight: 500; color: var(--ink-mid); margin-bottom: 4px; }
+
+    /* LIGHTBOX */
+    #lightbox {
+      display: none; position: fixed; inset: 0;
+      background: rgba(10,9,8,0.92);
+      z-index: 9999; align-items: center; justify-content: center;
+    }
+    #lightbox.open { display: flex; }
+    #lightbox img { max-width: 90vw; max-height: 90vh; object-fit: contain; border-radius: 6px; }
+    #lb-prev, #lb-next {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      background: rgba(255,255,255,0.12); color: #fff; border: none;
+      border-radius: 50%; width: 46px; height: 46px;
+      font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    #lb-prev { left: 20px; } #lb-next { right: 20px; }
+    #lb-close {
+      position: absolute; top: 16px; right: 20px;
+      background: rgba(255,255,255,0.12); color: #fff; border: none;
+      border-radius: 50%; width: 36px; height: 36px;
+      font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ANIMATIONS */
+    @keyframes fadeDown { from { opacity:0; transform: translateY(-12px); } to { opacity:1; transform: none; } }
+    @keyframes fadeUp   { from { opacity:0; transform: translateY(12px);  } to { opacity:1; transform: none; } }
+
+    @media (max-width: 600px) {
+      .property-grid { grid-template-columns: 1fr; }
+      header { grid-template-columns: auto 1fr; }
+    }
+
+    /* ── MY CLIENTS BUTTON ─────────────────────────────────── */
+    .btn-clients {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 9px 18px; border-radius: 100px;
+      background: var(--ink); color: var(--white);
+      border: none; font-family: 'DM Sans', sans-serif;
+      font-size: 0.8rem; font-weight: 500; cursor: pointer;
+      transition: background 0.15s; white-space: nowrap;
+    }
+    .btn-clients:hover { background: var(--ink-mid); }
+    .btn-clients svg { width: 15px; height: 15px; flex-shrink: 0; }
+    .client-count-badge {
+      background: var(--gold); color: var(--white);
+      border-radius: 100px; font-size: 0.65rem; font-weight: 700;
+      padding: 1px 6px; min-width: 18px; text-align: center;
+    }
+
+    /* ── CLIENT PANEL (slide-in drawer) ───────────────────── */
+    .client-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(10,9,8,0.45); z-index: 800;
+      backdrop-filter: blur(2px);
+    }
+    .client-overlay.open { display: block; }
+    .client-drawer {
+      position: fixed; top: 0; right: -680px; width: 660px; max-width: 98vw;
+      height: 100vh; background: var(--white);
+      box-shadow: -8px 0 48px rgba(28,26,23,0.18);
+      z-index: 801; display: flex; flex-direction: column;
+      transition: right 0.32s cubic-bezier(0.4,0,0.2,1);
+      overflow: hidden;
+    }
+    .client-drawer.open { right: 0; }
+
+    .drawer-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 22px 26px 18px;
+      border-bottom: 1px solid var(--border-md);
+      background: var(--cream); flex-shrink: 0;
+    }
+    .drawer-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4rem; font-weight: 600; color: var(--ink);
+    }
+    .drawer-close {
+      background: none; border: 1px solid var(--border-md);
+      border-radius: 50%; width: 34px; height: 34px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: var(--ink-mute); font-size: 1rem;
+      transition: all 0.15s;
+    }
+    .drawer-close:hover { background: var(--warm); color: var(--ink); }
+
+    /* tabs inside drawer */
+    .drawer-tabs {
+      display: flex; gap: 0;
+      border-bottom: 1px solid var(--border-md);
+      flex-shrink: 0; background: var(--white);
+    }
+    .drawer-tab {
+      padding: 11px 22px; font-size: 0.8rem; font-weight: 500;
+      color: var(--ink-mute); background: none; border: none;
+      border-bottom: 2px solid transparent; cursor: pointer;
+      transition: all 0.15s; margin-bottom: -1px;
+    }
+    .drawer-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+    .drawer-body { flex: 1; overflow-y: auto; padding: 20px 26px; }
+
+    /* search bar */
+    .client-search-bar {
+      width: 100%; padding: 9px 14px;
+      border: 1px solid var(--border-md); border-radius: 8px;
+      font-family: 'DM Sans', sans-serif; font-size: 0.85rem;
+      color: var(--ink); background: var(--cream);
+      outline: none; margin-bottom: 16px;
+    }
+    .client-search-bar:focus { border-color: var(--gold); }
+
+    /* client cards */
+    .client-card {
+      border: 1px solid var(--border);
+      border-radius: var(--r); padding: 16px 18px;
+      margin-bottom: 12px; background: var(--white);
+      cursor: pointer; transition: all 0.15s;
+    }
+    .client-card:hover { border-color: var(--gold-lt); box-shadow: var(--shadow-sm); }
+    .client-card.selected { border-color: var(--gold); background: #FFFDF7; }
+    .client-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .client-name-label {
+      font-weight: 600; font-size: 0.95rem; color: var(--ink);
+      font-family: 'Cormorant Garamond', serif; font-size: 1.1rem;
+    }
+    .client-email-label { font-size: 0.78rem; color: var(--ink-mute); margin-top: 2px; }
+    .client-status-pill {
+      font-size: 0.62rem; font-weight: 600; letter-spacing: 0.06em;
+      text-transform: uppercase; padding: 2px 8px; border-radius: 100px;
+      flex-shrink: 0;
+    }
+    .pill-active   { background: #EBF5EC; color: #2E7D32; }
+    .pill-inactive { background: var(--warm); color: var(--stone); }
+    .client-params-row {
+      display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px;
+    }
+    .param-chip {
+      font-size: 0.68rem; padding: 2px 8px;
+      background: var(--cream); border: 1px solid var(--border-md);
+      border-radius: 100px; color: var(--ink-mid);
+    }
+    .client-card-actions {
+      display: flex; gap: 7px; margin-top: 12px; flex-wrap: wrap;
+    }
+    .btn-sm {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 5px 12px; border-radius: 6px; font-size: 0.72rem;
+      font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif;
+      transition: all 0.15s; border: 1px solid var(--border-md);
+      text-decoration: none;
+    }
+    .btn-sm-ghost { background: var(--cream); color: var(--ink-mid); }
+    .btn-sm-ghost:hover { background: var(--warm); }
+    .btn-sm-gold  { background: var(--gold); color: var(--white); border-color: var(--gold); }
+    .btn-sm-gold:hover { background: var(--gold-lt); }
+    .btn-sm-danger { background: #FFF0F0; color: #C0392B; border-color: #FECACA; }
+    .btn-sm-danger:hover { background: #FEE2E2; }
+    .btn-sm svg { width: 11px; height: 11px; }
+    .consent-dot {
+      width: 7px; height: 7px; border-radius: 50%; display: inline-block;
+      margin-right: 4px;
+    }
+    .dot-yes { background: #2E7D32; }
+    .dot-no  { background: var(--stone); }
+
+    /* ADD / EDIT FORM */
+    .client-form { display: none; }
+    .client-form.visible { display: block; }
+    .form-section-label {
+      font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--stone); font-weight: 600; margin: 18px 0 10px;
+      padding-bottom: 6px; border-bottom: 1px solid var(--border);
+    }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-grid.full { grid-template-columns: 1fr; }
+    .form-label { font-size: 0.72rem; color: var(--ink-mid); margin-bottom: 4px; display: block; }
+    .form-input, .form-select, .form-textarea {
+      width: 100%; padding: 9px 12px;
+      border: 1px solid var(--border-md); border-radius: 8px;
+      font-family: 'DM Sans', sans-serif; font-size: 0.84rem;
+      color: var(--ink); background: var(--cream); outline: none;
+      transition: border-color 0.15s;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--gold); }
+    .form-textarea { resize: vertical; min-height: 70px; }
+    .form-select { appearance: none; cursor: pointer; }
+    .form-actions {
+      display: flex; gap: 10px; margin-top: 24px; padding-top: 18px;
+      border-top: 1px solid var(--border); flex-wrap: wrap;
+    }
+    .btn-save {
+      background: var(--gold); color: var(--white); border: none;
+      padding: 10px 24px; border-radius: 100px;
+      font-family: 'DM Sans', sans-serif; font-size: 0.82rem;
+      font-weight: 500; cursor: pointer; transition: background 0.15s;
+    }
+    .btn-save:hover { background: var(--gold-lt); }
+    .btn-cancel-form {
+      background: transparent; color: var(--ink-mute);
+      border: 1px solid var(--border-md); padding: 10px 20px;
+      border-radius: 100px; font-family: 'DM Sans', sans-serif;
+      font-size: 0.8rem; cursor: pointer;
+    }
+    .btn-add-client {
+      display: flex; align-items: center; gap: 7px;
+      background: var(--ink); color: var(--white);
+      border: none; padding: 9px 18px; border-radius: 100px;
+      font-family: 'DM Sans', sans-serif; font-size: 0.8rem;
+      font-weight: 500; cursor: pointer; transition: background 0.15s;
+      margin-bottom: 18px;
+    }
+    .btn-add-client:hover { background: var(--ink-mid); }
+    .btn-add-client svg { width: 14px; height: 14px; }
+
+    header { grid-template-columns: auto 1fr auto; }
+
+    .form-label { display:block; font-size:0.75rem; color:var(--ink-mute); margin-bottom:4px; font-weight:500; letter-spacing:0.03em; }
+    .form-input {
+      width:100%; padding:8px 11px;
+      border:1px solid var(--border-md); border-radius:6px;
+      background:var(--white); color:var(--ink);
+      font-family:'DM Sans',sans-serif; font-size:0.83rem;
+      transition:border-color 0.15s;
+    }
+    .form-input:focus { outline:none; border-color:var(--gold); }
+    .form-section-label {
+      font-size:0.68rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase;
+      color:var(--gold); margin-bottom:10px; margin-top:4px;
+    }
+
+    .empty-state {
+      text-align: center; padding: 50px 20px;
+      color: var(--stone); font-size: 0.88rem;
+    }
+    .empty-state svg { width: 40px; height: 40px; margin: 0 auto 12px; display: block; }
+
+    .toast-msg {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+      background: var(--ink); color: var(--white);
+      padding: 10px 22px; border-radius: 100px;
+      font-size: 0.82rem; font-weight: 500;
+      z-index: 9999; opacity: 0;
+      transition: opacity 0.2s; pointer-events: none;
+    }
+    .toast-msg.show { opacity: 1; }
+
+    .loading-spinner {
+      text-align: center; padding: 40px;
+      color: var(--stone); font-size: 0.85rem;
+    }
+    .spinner {
+      width: 28px; height: 28px; border: 2px solid var(--border-md);
+      border-top-color: var(--gold); border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto 10px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<div class="page">
+
+  <header>
+    <div class="agent-photo-placeholder">KN</div>
+    <div>
+      <div class="agent-name">Kam Norwood</div>
+      <div class="agent-title">Commercial Real Estate Broker &nbsp;·&nbsp; (520) 360-8510</div>
+    </div>
+    <button class="btn-clients" onclick="openClientDrawer()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Clients
+      <span class="client-count-badge" id="client-count-badge" style="display:none">0</span>
+    </button>
+  </header>
+
+  <!-- CLIENT OVERLAY + DRAWER -->
+  <div class="client-overlay" id="client-overlay" onclick="closeClientDrawer()"></div>
+  <div class="client-drawer" id="client-drawer">
+    <div class="drawer-header">
+      <div class="drawer-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;flex-shrink:0"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        Client Portal
+      </div>
+      <button class="drawer-close" onclick="closeClientDrawer()">✕</button>
+    </div>
+
+    <div class="drawer-tabs">
+      <button class="drawer-tab active" id="dtab-list" onclick="switchDrawerTab('list')">All Clients</button>
+      <button class="drawer-tab" id="dtab-add" onclick="switchDrawerTab('add')">+ Add Client</button>
+      <button class="drawer-tab" id="dtab-email" onclick="switchDrawerTab('email')">✉ Send Email</button>
+    </div>
+
+    <div class="drawer-body">
+
+      <!-- TAB: LIST -->
+      <div id="dpanel-list">
+        <input type="text" class="client-search-bar" id="client-search" placeholder="Search by name, email, or company…" oninput="filterClients()">
+        <div id="clients-list-wrap">
+          <div class="loading-spinner"><div class="spinner"></div>Loading clients…</div>
+        </div>
+      </div>
+
+      <!-- TAB: ADD CLIENT -->
+      <div id="dpanel-add" style="display:none">
+        <div class="client-form visible" id="add-client-form">
+          <div class="form-section-label">Contact Info</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+            <div>
+              <label class="form-label">Full Name *</label>
+              <input type="text" class="form-input" id="f-name" placeholder="Jane Smith">
+            </div>
+            <div>
+              <label class="form-label">Company</label>
+              <input type="text" class="form-input" id="f-company" placeholder="Acme Corp">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+            <div>
+              <label class="form-label">Email *</label>
+              <input type="email" class="form-input" id="f-email" placeholder="jane@example.com">
+            </div>
+            <div>
+              <label class="form-label">Phone</label>
+              <input type="tel" class="form-input" id="f-phone" placeholder="(520) 555-1234">
+            </div>
+          </div>
+          <div style="margin-bottom:14px">
+            <label class="form-label">Notes</label>
+            <textarea class="form-input" id="f-notes" rows="2" placeholder="Any notes about this client…" style="resize:vertical"></textarea>
+          </div>
+
+          <div class="form-section-label" style="margin-top:4px">Search Parameters</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+            <div>
+              <label class="form-label">Property Type</label>
+              <input type="text" class="form-input" id="f-prop-type" placeholder="Industrial, Retail…">
+            </div>
+            <div>
+              <label class="form-label">Listing Type</label>
+              <select class="form-input" id="f-listing-type">
+                <option value="">Any</option>
+                <option>For Sale</option>
+                <option>For Lease</option>
+                <option>For Sale or Lease</option>
+              </select>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+            <div>
+              <label class="form-label">Price Min</label>
+              <input type="text" class="form-input" id="f-price-min" placeholder="$500,000">
+            </div>
+            <div>
+              <label class="form-label">Price Max</label>
+              <input type="text" class="form-input" id="f-price-max" placeholder="$2,000,000">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+            <div>
+              <label class="form-label">Size Min (SF)</label>
+              <input type="text" class="form-input" id="f-size-min" placeholder="2,000">
+            </div>
+            <div>
+              <label class="form-label">Size Max (SF)</label>
+              <input type="text" class="form-input" id="f-size-max" placeholder="10,000">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+            <div>
+              <label class="form-label">Location / Area</label>
+              <input type="text" class="form-input" id="f-location" placeholder="Tucson South Side">
+            </div>
+            <div>
+              <label class="form-label">Min CAP Rate</label>
+              <input type="text" class="form-input" id="f-cap-rate" placeholder="5%">
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px">
+            <input type="checkbox" id="f-opp-zone" style="width:15px;height:15px;accent-color:var(--gold)">
+            <label for="f-opp-zone" style="font-size:0.83rem;color:var(--ink-mid);cursor:pointer">Opportunity Zone only</label>
+          </div>
+
+          <button class="btn-add-client" onclick="saveClient()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Save Client to Supabase
+          </button>
+        </div>
+      </div>
+
+      <!-- TAB: SEND EMAIL -->
+      <div id="dpanel-email" style="display:none">
+        <div style="margin-bottom:12px">
+          <label class="form-label">To (select clients)</label>
+          <div id="email-recipient-list" style="max-height:140px;overflow-y:auto;border:1px solid var(--border-md);border-radius:6px;padding:6px 10px;background:var(--white);font-size:0.82rem">
+            <div style="color:var(--stone);font-style:italic">Loading clients…</div>
+          </div>
+          <div style="margin-top:4px;font-size:0.73rem;color:var(--ink-mute)">
+            <button onclick="selectAllRecipients()" style="background:none;border:none;color:var(--gold);cursor:pointer;font-size:0.73rem;padding:0;text-decoration:underline">Select all</button>
+            &nbsp;·&nbsp;
+            <button onclick="clearAllRecipients()" style="background:none;border:none;color:var(--ink-mute);cursor:pointer;font-size:0.73rem;padding:0;text-decoration:underline">Clear</button>
+          </div>
+        </div>
+        <div style="margin-bottom:10px">
+          <label class="form-label">Subject *</label>
+          <input type="text" class="form-input" id="e-subject" placeholder="New Listings — Tucson Industrial">
+        </div>
+        <div style="margin-bottom:10px">
+          <label class="form-label">Message *</label>
+          <textarea class="form-input" id="e-body" rows="6" style="resize:vertical" placeholder="Hi [Client Name],&#10;&#10;I wanted to share some listings that match your search criteria…&#10;&#10;Best,&#10;Kam"></textarea>
+        </div>
+        <div style="margin-bottom:14px;font-size:0.78rem;color:var(--ink-mute);background:var(--warm);padding:10px 12px;border-radius:6px;line-height:1.5">
+          📧 Emails are sent via <strong>Resend</strong> from <strong>kam@knorwoodcre.com</strong>. Clients can reply directly to that address. Each client receives a personalized copy.
+        </div>
+        <button class="btn-add-client" id="send-email-btn" onclick="sendEmails()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9l20-7z"/></svg>
+          Send via Resend
+        </button>
+      </div>
+
+    </div><!-- /drawer-body -->
+  </div><!-- /client-drawer -->
+
+  <div class="filter-tabs">
+    <button class="filter-tab tab-kam active" data-tab="kam" onclick="setTab(this,'kam')">⭐ Kam's Listings</button>
+    <button class="filter-tab" data-tab="all" onclick="setTab(this,'all')">All Properties</button>
+    <button class="filter-tab" data-tab="For Sale" onclick="setTab(this,'For Sale')">For Sale</button>
+    <button class="filter-tab" data-tab="For Lease" onclick="setTab(this,'For Lease')">For Lease</button>
+    <button class="filter-tab" data-tab="For Sale or Lease" onclick="setTab(this,'For Sale or Lease')">Sale or Lease</button>
+  </div>
+
+  <div class="results-meta" id="results-count"></div>
+  <div class="property-grid" id="property-grid"></div>
+
+  <footer id="footer">
+    <div class="footer-brand">Kam Norwood &nbsp;·&nbsp; Commercial Real Estate</div>
+    <div style="margin-top:4px">knorwood@picor.com</div>
+  </footer>
+</div>
+
+<!-- LIGHTBOX -->
+<div id="lightbox">
+  <button id="lb-close" onclick="lbClose()">✕</button>
+  <button id="lb-prev" onclick="lbMove(-1)">&#8249;</button>
+  <img id="lb-img" src="" alt="" />
+  <button id="lb-next" onclick="lbMove(1)">&#8250;</button>
+</div>
+
+<script>
+const CLIENT = {
+  agentName: "Kam Norwood",
+  agentTitle: "Commercial Real Estate Broker",
+  agentPhone: "(520) 360-8510",
+  agentEmail: "knorwood@picor.com",
+};
+
+const LISTINGS = [
+  { id:1, address1:"3626 E 47th St", kamListing:true, listingType:"For Sale", address2:"Tucson, AZ 85713", price:"$1,750,000", type:"Industrial / Manufacturing", sqft:"8,800", capRate:"", opportunityZone:false, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/3626%20E.%2047TH%20STREET,%20TUCSON,%20AZ%2085713/3626_east_47th_street/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/3626%20E.%2047TH%20STREET,%20TUCSON,%20AZ%2085713/3626_east_47th_street/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/3626%20E.%2047TH%20STREET,%20TUCSON,%20AZ%2085713/3626_east_47th_street/3.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/3626%20E.%2047TH%20STREET,%20TUCSON,%20AZ%2085713/3626_east_47th_street/4.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/3626%20E.%2047TH%20STREET,%20TUCSON,%20AZ%2085713/3626_east_47th_street/5.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/3626%20E.%2047TH%20STREET,%20TUCSON,%20AZ%2085713/3626_east_47th_street/1.jpg", crexiUrl:"https://www.crexi.com/properties/2496333/arizona-3646-e-47th-st", flyerUrl:"", notes:"Built 2008. Single tenancy. 3 drive-in doors (10′×12′). 16′ clear height. Fenced lot. AC, cooler, storage." },
+  { id:2, address1:"2023 W Price St", kamListing:true, listingType:"For Sale", address2:"Tucson, AZ 85705", price:"$2,750,000", type:"Industrial / Manufacturing", sqft:"6,847", capRate:"6.55%", opportunityZone:false, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/2023_w_price_st/images/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/2023_w_price_st/images/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/2023_w_price_st/images/3.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/2023_w_price_st/images/4.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/2023_w_price_st/images/5.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/2023_w_price_st/images/1.jpg", crexiUrl:"https://www.crexi.com/properties/2477066/arizona-fully-leased-tucson-ios-investment-opportunity", flyerUrl:"", notes:"Fully leased IOS investment. Built 1997. Single tenancy. 3 drive-in doors (12′×12′). 1.14 AC lot. Fenced." },
+  { id:3, address1:"321–327 S Kino Pkwy", kamListing:true, listingType:"For Sale", address2:"Tucson, AZ 85719", price:"$1,400,000", type:"Industrial", sqft:"9,482", capRate:"", opportunityZone:false, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/321-327_south_kino_pkwy/images/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/321-327_south_kino_pkwy/images/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/321-327_south_kino_pkwy/images/3.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/321-327_south_kino_pkwy/images/1.jpg", crexiUrl:"https://www.crexi.com/properties/2344230/arizona-dales-doors", flyerUrl:"", notes:"Dales Doors. Multi-tenant. On-market 96 days." },
+  { id:4, address1:"2856 E Fort Lowell Rd", listingType:"For Sale", address2:"Tucson, AZ 85716", price:"Price Not Disclosed", type:"Retail / Office / Industrial", sqft:"9,202", capRate:"", opportunityZone:false, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/2856_e_fort_lowell_rd/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/2856_e_fort_lowell_rd/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/2856_e_fort_lowell_rd/3.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/2856_e_fort_lowell_rd/1.jpg", crexiUrl:"https://www.crexi.com/properties/2253884/arizona-2856-e-fort-lowell-rd", flyerUrl:"", notes:"Multi-use property. N/A tenancy. On-market 179 days." },
+  { id:5, address1:"5181 S Nogales Hwy", listingType:"For Sale", address2:"Tucson, AZ 85706", price:"$250,000", type:"Retail / Industrial", sqft:"1,050", capRate:"", opportunityZone:true, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/5181_s_nogales_hwy/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/5181_s_nogales_hwy/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/5181_s_nogales_hwy/3.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/5181_s_nogales_hwy/1.jpg", crexiUrl:"https://www.crexi.com/properties/2297488/arizona-2-bay-automotive-shop", flyerUrl:"", notes:"2-Bay Automotive Shop. Opportunity Zone. On-market 153 days." },
+  { id:6, address1:"748 E 16th St", kamListing:true, listingType:"For Lease", address2:"Tucson, AZ 85719", price:"Price Not Disclosed", type:"Industrial / Warehouse", sqft:"9,310", capRate:"", opportunityZone:true, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/748_e_16th_st/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/748_e_16th_st/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/748_e_16th_st/3.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/748_e_16th_st/1.jpg", crexiUrl:"https://www.crexi.com/properties/2415143/arizona-748-e-16th-street", flyerUrl:"", notes:"Built 1965. Vacant, single tenancy. 9,310 SF available. Asking rent $8.40/SF/NNN. 1 dock door. Opportunity Zone." },
+  { id:7, address1:"410 E Fort Lowell Rd", listingType:"For Sale", address2:"Tucson, AZ 85705", price:"$649,000", type:"Industrial / Mixed Use", sqft:"7,294", capRate:"", opportunityZone:false, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/410_e_fort_lowell_rd/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/410_e_fort_lowell_rd/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/410_e_fort_lowell_rd/3.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/410_e_fort_lowell_rd/1.jpg", crexiUrl:"https://www.crexi.com/properties/2332831/arizona-410-e-fort-lowell-rd", flyerUrl:"", notes:"On-market 105 days." },
+  { id:8, address1:"3702 E Hardy Dr", listingType:"For Sale", address2:"Tucson, AZ 85716", price:"$621,075", type:"Industrial / Retail", sqft:"3,549", capRate:"", opportunityZone:false, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3702_e_hardy_dr/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3702_e_hardy_dr/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3702_e_hardy_dr/3.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3702_e_hardy_dr/1.jpg", crexiUrl:"https://www.crexi.com/properties/2306131/arizona-3702-e-hardy-drive", flyerUrl:"", notes:"On-market 144 days. $175/SF." },
+  { id:9, address1:"3122 E Columbia St", listingType:"For Sale", address2:"Tucson, AZ 85714", price:"Price Not Disclosed", type:"Industrial", sqft:"10,000", capRate:"", opportunityZone:false, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3122_e_columbia_st/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3122_e_columbia_st/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3122_e_columbia_st/3.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3122_e_columbia_st/1.jpg", crexiUrl:"https://www.crexi.com/properties/2466283/arizona-lincoln-manufacturing-pg-inc", flyerUrl:"", notes:"Lincoln Manufacturing PG Inc. 22,503 SF lot. On-market 20 days." },
+  { id:10, address1:"821 E 47th St", kamListing:true, listingType:"For Sale or Lease", address2:"Tucson, AZ 85713", price:"$1,500,000", type:"Industrial / Office", sqft:"7,373", capRate:"", opportunityZone:true, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/821_e_47th_st/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/821_e_47th_st/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/821_e_47th_st/3.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/821_e_47th_st/1.jpg", crexiUrl:"https://www.crexi.com/properties/2466114/arizona-821-e-47th-st", flyerUrl:"", notes:"Built 1979. Multi-tenant. 7,373 SF available. $19.00/SF/NNN. 18′ clear height. 4 drive-in doors. Opportunity Zone." },
+  { id:11, address1:"3452 E Milton Rd", kamListing:true, listingType:"For Sale", address2:"Tucson, AZ 85706", price:"$635,000", type:"Retail / Industrial / Special Purpose", sqft:"2,116", capRate:"", opportunityZone:true, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3452%20_e_milton_rd/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3452%20_e_milton_rd/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3452%20_e_milton_rd/3.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3452%20_e_milton_rd/1.jpg", crexiUrl:"https://www.crexi.com/properties/2007335/arizona-milton-road", flyerUrl:"", notes:"Milton Road. 0.22 AC lot. Opportunity Zone. $300/SF. On-market 309 days." },
+  { id:12, address1:"7777 E Valencia Rd", kamListing:true, listingType:"For Sale", address2:"Tucson, AZ 85747", price:"$3,500,000", type:"Industrial / Land", sqft:"4,000", capRate:"", opportunityZone:false, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/7777_e_valencia_rd/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/7777_e_valencia_rd/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/7777_e_valencia_rd/3.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/7777_e_valencia_rd/1.jpg", crexiUrl:"https://www.crexi.com/properties/2250668/arizona-7777-e-valencia-rd", flyerUrl:"", notes:"AZ Conagg. 12.47 AC lot. Built 2000. 4,000 SF available. 14′ clear height. On-market 182 days." },
+  { id:13, address1:"3238 E Columbia St", listingType:"For Sale", address2:"Tucson, AZ 85714", price:"$949,000", type:"Industrial / Manufacturing", sqft:"6,943", capRate:"", opportunityZone:false, imageUrl:"", crexiUrl:"https://www.crexi.com/properties/2357652/arizona-columbia", flyerUrl:"", notes:"Built 1972. Multi-tenant. 10′ clear height. Fenced lot. On-market 83 days." },
+  { id:14, address1:"1425 E Apache Park Pl", listingType:"For Sale", address2:"Tucson, AZ 85714", price:"$840,000", type:"Industrial", sqft:"6,000", capRate:"", opportunityZone:true, imageUrl:"", crexiUrl:"https://www.crexi.com/properties/2478289/arizona-1425-e-apache-park-pl", flyerUrl:"", notes:"Multi-tenant. 0.56 AC lot. Opportunity Zone. On-market 14 days." },
+  { id:15, address1:"3208 E District St", kamListing:true, listingType:"For Sale or Lease", address2:"Tucson, AZ 85714", price:"$625,000", type:"Industrial / Warehouse", sqft:"5,900", capRate:"", opportunityZone:false, imageUrl:"", crexiUrl:"https://www.crexi.com/properties/2335229/arizona-3208-e-district-st-palo-verde-industrial-flex", flyerUrl:"", notes:"Palo Verde Industrial Flex. Built 2002. 1,700–5,900 SF available. $10.40/SF/MG. 5 drive-ins. AC, mezzanine, fenced yard." },
+  { id:16, address1:"7940 S Kolb Rd", kamListing:true, listingType:"For Lease", address2:"Tucson, AZ 85756", price:"Price Not Disclosed", type:"Industrial / Manufacturing", sqft:"9,000", capRate:"", opportunityZone:false, imageUrl:"", crexiUrl:"https://www.crexi.com/properties/2316907/arizona-7940-s-kolb-road", flyerUrl:"", notes:"Built 1974. Single tenancy. 9,000 SF available. 16′ clear height. 2 drive-ins (12′×14′). 2.96 AC lot. Fenced." },
+  { id:17, address1:"960 E 17th St", kamListing:true, listingType:"For Sale", address2:"Tucson, AZ 85719", price:"$1,079,750", type:"Industrial / Warehouse", sqft:"8,637", capRate:"", opportunityZone:true, imageUrl:"", crexiUrl:"https://www.crexi.com/properties/2461803/arizona-960-e-17th-street", flyerUrl:"", notes:"17th Street Red Brick Showroom/Warehouse. Vacant. 19,360 SF lot. $125/SF. Opportunity Zone." },
+  { id:18, address1:"1750 W Roger Rd", listingType:"For Sale", address2:"Tucson, AZ 85705", price:"Price Not Disclosed", type:"Industrial", sqft:"3,266", capRate:"", opportunityZone:false, imageUrl:"", crexiUrl:"https://www.crexi.com/properties/1469526/arizona-1750-w-roger-road", flyerUrl:"", notes:"Single tenant. 0.9 AC lot. On-market 792 days." },
+  { id:19, address1:"1140 N Rosemont Blvd", listingType:"For Sale", address2:"Tucson, AZ 85712", price:"$1,195,600", type:"Retail / Office / Industrial", sqft:"5,707", capRate:"", opportunityZone:false, imageUrl:"", crexiUrl:"https://www.crexi.com/properties/2193266/arizona-1140-n-rosemont-blvd", flyerUrl:"", notes:"Vacant. 1 unit. $209.57/SF. On-market 224 days." },
+  { id:20, address1:"4004 N Romero Rd", listingType:"For Sale", address2:"Tucson, AZ 85705", price:"$375,000", type:"Industrial / Mixed Use / Office", sqft:"3,900", capRate:"", opportunityZone:false, imageUrl:"", crexiUrl:"https://www.crexi.com/properties/2254756/arizona-4004-n-romero-road", flyerUrl:"", notes:"Multi-tenant. 2 units. 0.428 AC lot. $96.15/SF. On-market 179 days." },
+  { id:21, address1:"4164 N Flowing Wells Rd", listingType:"For Sale or Lease", address2:"Tucson, AZ 85705", price:"$390,000", type:"Industrial / Office / Retail", sqft:"2,996", capRate:"", opportunityZone:false, imageUrl:"", crexiUrl:"https://www.crexi.com/properties/1923164/arizona-1640-sf-industrial-office-space-for-lease-or-sale", flyerUrl:"", notes:"Built 1955. Vacant. 0.37 AC lot. AC, fenced yard. On-market 369 days." },
+  { id:22, address1:"313 N Country Club Rd", listingType:"For Sale", address2:"Tucson, AZ 85716", price:"$215,000", type:"Industrial", sqft:"1", capRate:"", opportunityZone:false, imageUrl:"", crexiUrl:"https://www.crexi.com/properties/1326899/arizona-313-n-country-club-rd", flyerUrl:"", notes:"Single tenant. On-market 906 days." },
+  { id:23, address1:"530 N 7th Ave", listingType:"For Sale", address2:"Tucson, AZ 85705", price:"$995,000", type:"Industrial", sqft:"8,800", capRate:"", opportunityZone:false, imageUrl:"", crexiUrl:"https://www.crexi.com/properties/1558096/arizona-730-740-n-7th-avenue", flyerUrl:"", notes:"530–540 N 7th Ave. 0.56 AC lot. $113/SF. On-market 700 days." },
+  { id:24, address1:"3365 N Dodge Blvd", listingType:"For Sale", address2:"Tucson, AZ 85716", price:"$485,000", type:"Industrial / Mixed Use / Office", sqft:"2,384", capRate:"", opportunityZone:false, imageUrl:"", crexiUrl:"https://www.crexi.com/properties/1888516/arizona-printex-building", flyerUrl:"", notes:"Printex Building. 1 unit. $203/SF. On-market 400 days." },
+];
+
+let _activeTab = 'kam';
+let _lbImgs = [], _lbIdx = 0;
+
+function setTab(btn, tab) {
+  document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  _activeTab = tab;
+  renderListings();
+}
+
+function renderListings() {
+  const grid = document.getElementById('property-grid');
+  const countEl = document.getElementById('results-count');
+
+  const filtered = LISTINGS.filter(p => {
+    if (_activeTab === 'all') return true;
+    if (_activeTab === 'kam') return p.kamListing === true;
+    return p.listingType === _activeTab;
+  });
+
+  const count = filtered.length;
+  countEl.innerHTML = `<strong>${count}</strong> propert${count === 1 ? 'y' : 'ies'}`;
+
+  if (count === 0) {
+    grid.innerHTML = `<div class="no-results"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><div>No properties match this filter.</div></div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map((p, i) => {
+    const delay = (0.1 + i * 0.06).toFixed(2);
+    const imgs = p.images && p.images.length ? p.images : (p.imageUrl ? [p.imageUrl] : []);
+    const gid = `gal-${p.id}`;
+
+    const imageHtml = imgs.length > 0
+      ? `<div class="gallery-wrap" id="${gid}" data-imgs='${JSON.stringify(imgs)}' data-idx="0">
+           <img src="${imgs[0]}" alt="${p.address1}" loading="lazy" onclick="lbFromGallery(this)" />
+           ${imgs.length > 1 ? `
+           <button class="gallery-btn prev" onclick="galMove('${gid}',-1,event)">&#8249;</button>
+           <button class="gallery-btn next" onclick="galMove('${gid}',1,event)">&#8250;</button>
+           <div class="gallery-counter">1 / ${imgs.length}</div>` : ''}
+         </div>`
+      : `<div class="card-img-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9l4-4 4 4 4-4 4 4"/><path d="M3 15l4 2 4-2 4 2 4-2"/></svg></div>`;
+
+    const badge = p.opportunityZone
+      ? `<div class="card-badge opp">Opportunity Zone</div>`
+      : `<div class="card-badge">${p.type}</div>`;
+
+    const badgeClass = p.listingType === "For Lease" ? "badge-lease" : p.listingType === "For Sale or Lease" ? "badge-both" : "badge-sale";
+
+    const metrics = [];
+    if (p.type)    metrics.push(`<div class="metric"><strong>${p.type}</strong></div>`);
+    if (p.sqft && p.sqft !== '1') metrics.push(`<div class="metric"><div class="metric-dot"></div><strong>${p.sqft}</strong> SqFt</div>`);
+    if (p.capRate) metrics.push(`<div class="metric"><div class="metric-dot"></div><strong>${p.capRate}</strong> CAP</div>`);
+
+    const flyerIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`;
+    const flyerBtn = p.flyerUrl
+      ? `<a href="${p.flyerUrl}" target="_blank" rel="noopener" class="btn-flyer">${flyerIcon} View Flyer</a>`
+      : `<span class="btn-flyer placeholder">${flyerIcon} Flyer Coming</span>`;
+
+    const crexiBtn = p.crexiUrl
+      ? `<a href="${p.crexiUrl}" target="_blank" rel="noopener" class="btn-crexi-card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> View on Crexi</a>`
+      : '';
+
+    return `
+      <div class="card ${p.kamListing ? 'is-kam-listing' : ''}" style="animation-delay:${delay}s">
+        <div class="card-img">
+          ${imageHtml}
+          <div class="badge-stack">
+            ${badge}
+            ${p.kamListing ? '<div class="kam-badge">Kam\'s Listing</div>' : ''}
+          </div>
+        </div>
+        <div class="card-body">
+          <span class="listing-type-badge ${badgeClass}">${p.listingType || "For Sale"}</span>
+          <div class="card-price">${p.price}</div>
+          <div class="card-address-1">${p.address1}</div>
+          <div class="card-address-2">${p.address2}</div>
+          <div class="card-divider"></div>
+          <div class="card-metrics">${metrics.join('')}</div>
+          <div class="card-actions">${flyerBtn}${crexiBtn}</div>
+        </div>
+        <div class="broker-strip">
+          <div class="broker-initials">KN</div>
+          <div class="broker-details">
+            <div class="broker-label">Broker in Charge</div>
+            <div class="broker-name">${CLIENT.agentName}</div>
+            <div class="broker-meta">${CLIENT.agentPhone}</div>
+          </div>
+          <a class="broker-contact-btn" href="mailto:${CLIENT.agentEmail}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
+            Contact
+          </a>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function galMove(gid, dir, e) {
+  e.stopPropagation();
+  const wrap = document.getElementById(gid);
+  const imgs = JSON.parse(wrap.dataset.imgs);
+  let idx = parseInt(wrap.dataset.idx) + dir;
+  if (idx < 0) idx = imgs.length - 1;
+  if (idx >= imgs.length) idx = 0;
+  wrap.dataset.idx = idx;
+  wrap.querySelector('img').src = imgs[idx];
+  const counter = wrap.querySelector('.gallery-counter');
+  if (counter) counter.textContent = `${idx+1} / ${imgs.length}`;
+}
+
+function lbFromGallery(imgEl) {
+  const wrap = imgEl.closest('.gallery-wrap');
+  _lbImgs = JSON.parse(wrap.dataset.imgs);
+  _lbIdx = parseInt(wrap.dataset.idx);
+  lbShow();
+}
+
+function lbShow() {
+  document.getElementById('lb-img').src = _lbImgs[_lbIdx];
+  document.getElementById('lightbox').classList.add('open');
+}
+
+function lbClose() { document.getElementById('lightbox').classList.remove('open'); }
+
+function lbMove(dir) {
+  _lbIdx = (_lbIdx + dir + _lbImgs.length) % _lbImgs.length;
+  document.getElementById('lb-img').src = _lbImgs[_lbIdx];
+}
+
+document.addEventListener('click', e => { if (e.target.id === 'lightbox') lbClose(); });
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('lightbox').classList.contains('open')) return;
+  if (e.key === 'ArrowLeft') lbMove(-1);
+  if (e.key === 'ArrowRight') lbMove(1);
+  if (e.key === 'Escape') lbClose();
+});
+
+renderListings();
+
+// ═══════════════════════════════════════════════════════════════
+//  SUPABASE CONFIG
+// ═══════════════════════════════════════════════════════════════
+const SUPABASE_URL  = 'https://mlgmigguhljsiopctkkj.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1sZ21pZ2d1aGxqc2lvcGN0a2tqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMDM3NzcsImV4cCI6MjA4OTY3OTc3N30.rwX3Ck09LwcUyT7SntrRA8rtFmExRlPLsG3iQPMjBSs';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// ═══════════════════════════════════════════════════════════════
+//  RESEND CONFIG  — set your Resend API key here
+//  (For production, proxy through a Vercel/Netlify function)
+// ═══════════════════════════════════════════════════════════════
+const RESEND_API_KEY = 'YOUR_RESEND_API_KEY'; // ← paste key here
+const FROM_EMAIL     = 'kam@knorwoodcre.com';   // ← your verified Resend sender
+
+// ═══════════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════════
+let _clients = [];
+let _drawerOpen = false;
+
+// ═══════════════════════════════════════════════════════════════
+//  DRAWER OPEN / CLOSE
+// ═══════════════════════════════════════════════════════════════
+function openClientDrawer() {
+  document.getElementById('client-drawer').classList.add('open');
+  document.getElementById('client-overlay').classList.add('open');
+  _drawerOpen = true;
+  loadClients();
+}
+
+function closeClientDrawer() {
+  document.getElementById('client-drawer').classList.remove('open');
+  document.getElementById('client-overlay').classList.remove('open');
+  _drawerOpen = false;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  DRAWER TAB SWITCH
+// ═══════════════════════════════════════════════════════════════
+function switchDrawerTab(tab) {
+  ['list','add','email'].forEach(t => {
+    document.getElementById(`dtab-${t}`).classList.toggle('active', t === tab);
+    document.getElementById(`dpanel-${t}`).style.display = t === tab ? '' : 'none';
+  });
+  if (tab === 'email') renderEmailRecipients();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  LOAD CLIENTS FROM SUPABASE
+// ═══════════════════════════════════════════════════════════════
+async function loadClients() {
+  const wrap = document.getElementById('clients-list-wrap');
+  wrap.innerHTML = '<div class="loading-spinner"><div class="spinner"></div>Loading clients…</div>';
+  try {
+    const { data, error } = await sb
+      .from('clients')
+      .select(`*, client_search_params(*)`)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    _clients = data || [];
+    updateClientBadge();
+    renderClientCards();
+  } catch (err) {
+    wrap.innerHTML = `<div class="empty-state" style="color:#c0392b">⚠ Could not load clients.<br><small>${err.message}</small></div>`;
+  }
+}
+
+function updateClientBadge() {
+  const badge = document.getElementById('client-count-badge');
+  if (_clients.length > 0) {
+    badge.textContent = _clients.length;
+    badge.style.display = '';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  RENDER CLIENT CARDS
+// ═══════════════════════════════════════════════════════════════
+function renderClientCards(filter = '') {
+  const wrap = document.getElementById('clients-list-wrap');
+  const q = filter.toLowerCase();
+  const list = q
+    ? _clients.filter(c =>
+        (c.name||'').toLowerCase().includes(q) ||
+        (c.email||'').toLowerCase().includes(q) ||
+        (c.company||'').toLowerCase().includes(q))
+    : _clients;
+
+  if (list.length === 0) {
+    wrap.innerHTML = `<div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
+      ${q ? 'No clients match your search.' : 'No clients yet. Click <strong>+ Add Client</strong> to get started.'}
+    </div>`;
+    return;
+  }
+
+  wrap.innerHTML = list.map(c => {
+    const sp = c.client_search_params?.[0];
+    const params = sp ? [sp.property_type, sp.listing_type, sp.price_min && sp.price_max ? `${sp.price_min}–${sp.price_max}` : (sp.price_min||sp.price_max||''), sp.size_min && sp.size_max ? `${sp.size_min}–${sp.size_max} SF` : ''].filter(Boolean).join(' · ') : '';
+    const statusClass = c.status === 'active' ? 'status-active' : 'status-inactive';
+    return `
+    <div class="client-card" id="cc-${c.id}">
+      <div class="client-card-top">
+        <div>
+          <div class="client-name-label">${esc(c.name)}</div>
+          <div class="client-email-label">${esc(c.email)}${c.company ? ' · '+esc(c.company) : ''}</div>
+        </div>
+        <span class="client-status-pill ${statusClass}">${c.status||'active'}</span>
+      </div>
+      ${params ? `<div class="client-params-row">${esc(params)}</div>` : ''}
+      <div class="client-card-actions">
+        <button class="btn-client-action btn-email-client" onclick="quickEmailClient('${c.id}','${esc(c.email)}','${esc(c.name)}')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
+          Email
+        </button>
+        <button class="btn-client-action btn-delete-client" onclick="deleteClient('${c.id}')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          Delete
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterClients() {
+  renderClientCards(document.getElementById('client-search').value);
+}
+
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ═══════════════════════════════════════════════════════════════
+//  SAVE NEW CLIENT
+// ═══════════════════════════════════════════════════════════════
+async function saveClient() {
+  const name    = document.getElementById('f-name').value.trim();
+  const email   = document.getElementById('f-email').value.trim();
+  const company = document.getElementById('f-company').value.trim();
+  const phone   = document.getElementById('f-phone').value.trim();
+  const notes   = document.getElementById('f-notes').value.trim();
+
+  if (!name || !email) { showToast('Name and Email are required.', true); return; }
+
+  const btn = document.querySelector('#add-client-form .btn-add-client');
+  btn.textContent = 'Saving…';
+  btn.disabled = true;
+
+  try {
+    // 1. Insert client
+    const { data: clientRow, error: cErr } = await sb
+      .from('clients')
+      .insert({ name, email, phone: phone||null, company: company||null, notes: notes||null })
+      .select()
+      .single();
+    if (cErr) throw cErr;
+
+    // 2. Insert search params if any filled
+    const propType    = document.getElementById('f-prop-type').value.trim();
+    const listingType = document.getElementById('f-listing-type').value;
+    const priceMin    = document.getElementById('f-price-min').value.trim();
+    const priceMax    = document.getElementById('f-price-max').value.trim();
+    const sizeMin     = document.getElementById('f-size-min').value.trim();
+    const sizeMax     = document.getElementById('f-size-max').value.trim();
+    const location    = document.getElementById('f-location').value.trim();
+    const capRate     = document.getElementById('f-cap-rate').value.trim();
+    const oppZone     = document.getElementById('f-opp-zone').checked;
+
+    if (propType||listingType||priceMin||priceMax||sizeMin||sizeMax||location||capRate||oppZone) {
+      const { error: spErr } = await sb.from('client_search_params').insert({
+        client_id: clientRow.id,
+        property_type: propType||null,
+        listing_type: listingType||null,
+        price_min: priceMin||null,
+        price_max: priceMax||null,
+        size_min: sizeMin||null,
+        size_max: sizeMax||null,
+        location: location||null,
+        cap_rate_min: capRate||null,
+        opportunity_zone: oppZone
+      });
+      if (spErr) console.warn('Search params save warning:', spErr.message);
+    }
+
+    // 3. Also insert email consent record
+    await sb.from('email_consent').insert({ client_id: clientRow.id, consented: false });
+
+    showToast(`✓ ${name} saved to Supabase!`);
+    clearAddForm();
+    switchDrawerTab('list');
+    await loadClients();
+
+  } catch (err) {
+    showToast('Error: ' + err.message, true);
+  } finally {
+    btn.textContent = 'Save Client to Supabase';
+    btn.disabled = false;
+  }
+}
+
+function clearAddForm() {
+  ['f-name','f-email','f-company','f-phone','f-notes','f-prop-type','f-price-min','f-price-max','f-size-min','f-size-max','f-location','f-cap-rate'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('f-listing-type').value = '';
+  document.getElementById('f-opp-zone').checked = false;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  DELETE CLIENT
+// ═══════════════════════════════════════════════════════════════
+async function deleteClient(id) {
+  if (!confirm('Delete this client? This cannot be undone.')) return;
+  const { error } = await sb.from('clients').delete().eq('id', id);
+  if (error) { showToast('Delete failed: ' + error.message, true); return; }
+  showToast('Client deleted.');
+  await loadClients();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  SEND EMAILS VIA RESEND
+// ═══════════════════════════════════════════════════════════════
+function renderEmailRecipients() {
+  const wrap = document.getElementById('email-recipient-list');
+  if (_clients.length === 0) {
+    wrap.innerHTML = '<span style="color:var(--stone);font-style:italic">No clients yet.</span>';
+    return;
+  }
+  wrap.innerHTML = _clients.map(c => `
+    <label style="display:flex;align-items:center;gap:7px;padding:4px 0;cursor:pointer">
+      <input type="checkbox" class="email-recipient-cb" data-id="${c.id}" data-email="${esc(c.email)}" data-name="${esc(c.name)}" style="accent-color:var(--gold)">
+      <span>${esc(c.name)}</span>
+      <span style="color:var(--ink-mute)">&lt;${esc(c.email)}&gt;</span>
+    </label>
+  `).join('');
+}
+
+function selectAllRecipients() {
+  document.querySelectorAll('.email-recipient-cb').forEach(cb => cb.checked = true);
+}
+function clearAllRecipients() {
+  document.querySelectorAll('.email-recipient-cb').forEach(cb => cb.checked = false);
+}
+
+function quickEmailClient(id, email, name) {
+  switchDrawerTab('email');
+  setTimeout(() => {
+    const cb = document.querySelector(`.email-recipient-cb[data-id="${id}"]`);
+    if (cb) cb.checked = true;
+  }, 50);
+}
+
+async function sendEmails() {
+  const checked = [...document.querySelectorAll('.email-recipient-cb:checked')];
+  if (checked.length === 0) { showToast('Select at least one recipient.', true); return; }
+  const subject = document.getElementById('e-subject').value.trim();
+  const body    = document.getElementById('e-body').value.trim();
+  if (!subject || !body) { showToast('Subject and message are required.', true); return; }
+
+  if (RESEND_API_KEY === 'YOUR_RESEND_API_KEY') {
+    showToast('⚠ Add your Resend API key to enable sending.', true);
+    return;
+  }
+
+  const btn = document.getElementById('send-email-btn');
+  btn.textContent = `Sending to ${checked.length} client${checked.length>1?'s':''}…`;
+  btn.disabled = true;
+
+  let sent = 0, failed = 0;
+  for (const cb of checked) {
+    const clientName  = cb.dataset.name;
+    const clientEmail = cb.dataset.email;
+    const clientId    = cb.dataset.id;
+    const personalBody = body.replace(/\[Client Name\]/gi, clientName);
+
+    try {
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${RESEND_API_KEY}`
+        },
+        body: JSON.stringify({
+          from: `Kam Norwood CRE <${FROM_EMAIL}>`,
+          to: [clientEmail],
+          reply_to: FROM_EMAIL,
+          subject: subject,
+          text: personalBody
+        })
+      });
+      if (res.ok) {
+        sent++;
+        // Log to Supabase email_log
+        await sb.from('email_log').insert({
+          client_id: clientId,
+          subject: subject,
+          status: 'sent'
+        });
+      } else {
+        const err = await res.json();
+        console.warn('Resend error for', clientEmail, err);
+        failed++;
+        await sb.from('email_log').insert({ client_id: clientId, subject, status: 'failed' });
+      }
+    } catch (e) {
+      failed++;
+      console.error('Send error:', e);
+    }
+  }
+
+  showToast(failed === 0
+    ? `✓ Sent to ${sent} client${sent>1?'s':''}!`
+    : `Sent ${sent}, failed ${failed}.`, failed > 0);
+  btn.textContent = 'Send via Resend';
+  btn.disabled = false;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════════════════════
+function showToast(msg, isError = false) {
+  let t = document.getElementById('toast-msg');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'toast-msg';
+    t.className = 'toast-msg';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.background = isError ? '#c0392b' : 'var(--ink)';
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+// Load client count on page load (badge in header)
+(async () => {
+  const { count } = await sb.from('clients').select('*', { count: 'exact', head: true });
+  if (count > 0) {
+    const badge = document.getElementById('client-count-badge');
+    badge.textContent = count;
+    badge.style.display = '';
+  }
+})();
+
+renderListings();
+</script>
+</body>
+</html>
