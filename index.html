@@ -94,6 +94,8 @@
     .filter-tab.active { background: var(--ink); color: var(--white); border-color: var(--ink); }
     .tab-kam.active { background: var(--gold); border-color: var(--gold); }
     .tab-kam { border-color: var(--gold-lt); color: var(--gold); }
+    .tab-review { border-color: #9b59b6; color: #9b59b6; }
+    .tab-review.active { background: #9b59b6; border-color: #9b59b6; color: var(--white); }
 
     /* RESULTS COUNT */
     .results-meta { font-size: 0.78rem; color: var(--ink-mute); margin-bottom: 16px; }
@@ -109,127 +111,320 @@
     /* CARD */
     .card {
       background: var(--white);
+      border: 1px solid var(--border);
       border-radius: var(--r);
       overflow: hidden;
       box-shadow: var(--shadow-sm);
-      border: 1px solid var(--border);
-      display: flex; flex-direction: column;
-      animation: fadeUp 0.5s ease both;
-      transition: box-shadow 0.2s, transform 0.2s;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+      animation: fadeUp 0.6s ease both;
     }
-    .card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
-    .is-kam-listing { border-color: rgba(184,150,62,0.35); }
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--border-md);
+    }
+    .card.is-kam-listing {
+      box-shadow: 0 0 0 2px #c9a84c, var(--shadow-sm);
+    }
+    .card.is-kam-listing:hover {
+      box-shadow: 0 0 0 2px #c9a84c, var(--shadow-lg);
+    }
 
     /* CARD IMAGE */
-    .card-img { position: relative; height: 200px; overflow: hidden; background: var(--warm); }
-    .card-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .card-img {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: var(--warm);
+      overflow: hidden;
+    }
+    .card-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.4s ease;
+    }
+    .card:hover .card-img img { transform: scale(1.03); }
     .card-img-placeholder {
-      width: 100%; height: 100%;
-      display: flex; align-items: center; justify-content: center;
-      color: var(--stone);
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--warm) 0%, var(--stone) 100%);
+      opacity: 0.6;
     }
-    .card-img-placeholder svg { width: 48px; height: 48px; }
-    .badge-stack { position: absolute; top: 10px; left: 10px; display: flex; flex-direction: column; gap: 5px; }
-    .card-badge {
-      display: inline-block; padding: 3px 9px;
-      background: rgba(28,26,23,0.75); backdrop-filter: blur(4px);
-      color: var(--white); font-size: 0.65rem; font-weight: 500;
-      letter-spacing: 0.06em; text-transform: uppercase; border-radius: 100px;
-    }
-    .card-badge.opp { background: rgba(184,150,62,0.85); }
-    .kam-badge {
-      display: inline-block; padding: 3px 9px;
-      background: var(--gold); color: var(--white);
-      font-size: 0.65rem; font-weight: 600;
-      letter-spacing: 0.06em; text-transform: uppercase; border-radius: 100px;
-    }
+    .card-img-placeholder svg { width: 40px; height: 40px; color: var(--ink-mid); }
 
     /* GALLERY */
     .gallery-wrap { position: relative; width: 100%; height: 100%; }
-    .gallery-wrap img { width: 100%; height: 100%; object-fit: cover; cursor: zoom-in; }
+    .gallery-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; transition: opacity 0.3s; cursor: zoom-in; }
     .gallery-btn {
       position: absolute; top: 50%; transform: translateY(-50%);
-      background: rgba(28,26,23,0.55); color: var(--white);
-      border: none; border-radius: 50%; width: 30px; height: 30px;
-      font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
-      opacity: 0; transition: opacity 0.2s;
+      background: rgba(0,0,0,0.45); border: none; color: #fff;
+      width: 28px; height: 28px; border-radius: 50%; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; line-height: 1; z-index: 4; transition: background 0.15s;
+      padding: 0;
     }
-    .gallery-wrap:hover .gallery-btn { opacity: 1; }
+    .gallery-btn:hover { background: rgba(0,0,0,0.7); }
     .gallery-btn.prev { left: 8px; }
     .gallery-btn.next { right: 8px; }
     .gallery-counter {
       position: absolute; bottom: 8px; right: 8px;
-      background: rgba(28,26,23,0.55); color: var(--white);
-      font-size: 0.65rem; padding: 2px 7px; border-radius: 100px;
+      background: rgba(0,0,0,0.5); color: #fff;
+      font-size: 0.6rem; padding: 2px 7px; border-radius: 100px;
+      letter-spacing: 0.04em; z-index: 4;
     }
+
+    /* BADGE STACK */
+    .badge-stack {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 5px;
+    }
+    .card-badge {
+      background: var(--ink);
+      color: var(--white);
+      font-size: 0.62rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 100px;
+    }
+    .card-badge.opp { background: var(--gold); color: var(--white); }
+    .kam-badge {
+      background: #c9a84c;
+      color: #fff;
+      font-size: 0.62rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 4px 10px 4px 8px;
+      border-radius: 100px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      box-shadow: 0 2px 8px rgba(201,168,76,0.45);
+    }
+    .kam-badge::before { content: "⭐"; font-size: 0.7rem; }
 
     /* CARD BODY */
-    .card-body { padding: 16px 18px; flex: 1; display: flex; flex-direction: column; gap: 6px; }
-    .listing-type-badge {
-      display: inline-block; padding: 2px 8px;
-      border-radius: 100px; font-size: 0.65rem; font-weight: 600;
-      letter-spacing: 0.05em; text-transform: uppercase;
+    .card-body {
+      padding: 16px 18px 18px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
     }
-    .badge-sale { background: #EBF5EC; color: #2E7D32; }
-    .badge-lease { background: #E8F0FB; color: #1565C0; }
-    .badge-both { background: #FFF8E1; color: #F57F17; }
+
+    .listing-type-badge {
+      display: inline-block;
+      align-self: flex-start;
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 100px;
+      margin-bottom: 6px;
+    }
+    .badge-sale { background: #e8f4ec; color: #2a7a45; }
+    .badge-lease { background: #e8eef8; color: #2a4a8a; }
+    .badge-both { background: #f5f0e8; color: #8a5a1a; }
+
     .card-price {
       font-family: 'Cormorant Garamond', serif;
-      font-size: 1.3rem; font-weight: 600; color: var(--ink);
-      line-height: 1.2;
+      font-size: 1.65rem;
+      font-weight: 600;
+      color: var(--ink);
+      line-height: 1;
+      margin-bottom: 6px;
+      letter-spacing: -0.01em;
     }
-    .card-address-1 { font-weight: 500; font-size: 0.9rem; color: var(--ink); }
-    .card-address-2 { font-size: 0.8rem; color: var(--ink-mute); }
-    .card-divider { height: 1px; background: var(--border); margin: 4px 0; }
-    .card-metrics { display: flex; flex-wrap: wrap; gap: 6px; font-size: 0.75rem; color: var(--ink-mid); }
-    .metric { display: flex; align-items: center; gap: 4px; }
-    .metric-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--gold); flex-shrink: 0; }
+    .card-price.unpriced {
+      font-size: 1.1rem;
+      color: var(--ink-mute);
+      font-style: italic;
+    }
+    .card-address-1 {
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--ink);
+      margin-bottom: 1px;
+    }
+    .card-address-2 {
+      font-size: 0.75rem;
+      color: var(--ink-mute);
+      margin-bottom: 12px;
+    }
+    .card-divider {
+      height: 1px;
+      background: var(--border);
+      margin-bottom: 12px;
+    }
+    .card-metrics {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 14px;
+      margin-bottom: 14px;
+      flex: 1;
+      align-content: flex-start;
+    }
+    .metric {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.74rem;
+      color: var(--ink-mute);
+    }
+    .metric strong { color: var(--ink-mid); font-weight: 500; }
+    .metric-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--stone);
+    }
 
     /* CARD ACTIONS */
-    .card-actions { display: flex; gap: 8px; margin-top: auto; padding-top: 10px; flex-wrap: wrap; }
-    .btn-flyer, .btn-crexi-card {
-      display: inline-flex; align-items: center; gap: 5px;
-      padding: 6px 12px; border-radius: 6px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.72rem; font-weight: 500;
-      text-decoration: none; cursor: pointer; transition: all 0.15s;
+    .card-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: auto;
+      padding-top: 12px;
+      flex-wrap: wrap;
     }
-    .btn-flyer { background: var(--cream); color: var(--ink-mid); border: 1px solid var(--border-md); }
-    .btn-flyer:hover { background: var(--warm); }
-    .btn-flyer.placeholder { opacity: 0.45; pointer-events: none; }
-    .btn-crexi-card { background: var(--ink); color: var(--white); border: 1px solid var(--ink); }
-    .btn-crexi-card:hover { background: var(--ink-mid); }
-    .btn-flyer svg, .btn-crexi-card svg { width: 12px; height: 12px; flex-shrink: 0; }
+    .btn-flyer, .btn-crexi-card {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 0.73rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.18s;
+      flex: 1;
+      justify-content: center;
+      white-space: nowrap;
+    }
+    .btn-flyer {
+      background: #fff;
+      border: 1.5px solid var(--gold);
+      color: var(--gold);
+    }
+    .btn-flyer:hover { background: var(--gold); color: #fff; }
+    .btn-flyer svg { width: 13px; height: 13px; flex-shrink: 0; }
+    .btn-flyer.placeholder {
+      border-style: dashed;
+      opacity: 0.55;
+      cursor: default;
+      pointer-events: none;
+    }
+    .btn-crexi-card {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: transparent;
+      border: 1px solid var(--border-md);
+      color: var(--gold);
+      border-radius: 6px;
+      transition: all 0.18s;
+      flex: 1;
+      justify-content: center;
+    }
+    .btn-crexi-card:hover { background: #333; border-color: #333; color: #fff; }
+    .btn-crexi-card svg { width: 11px; height: 11px; }
 
     /* BROKER STRIP */
     .broker-strip {
-      display: flex; align-items: center; gap: 10px;
-      padding: 10px 18px;
-      border-top: 1px solid var(--border);
-      background: var(--cream);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 16px;
+      margin: 0 18px 18px;
+      background: linear-gradient(135deg, var(--cream) 0%, #F2EDE3 100%);
+      border: 1px solid var(--border-md);
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
     }
-    .broker-initials {
-      width: 34px; height: 34px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--stone) 0%, var(--ink-mid) 100%);
-      display: flex; align-items: center; justify-content: center;
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 0.9rem; font-weight: 600; color: var(--white);
+    .broker-strip::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: linear-gradient(180deg, var(--gold) 0%, var(--gold-lt) 100%);
+      border-radius: 8px 0 0 8px;
+    }
+    .broker-headshot {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+      object-position: center top;
+      border: 2px solid var(--white);
+      box-shadow: 0 2px 8px rgba(28,26,23,0.14);
       flex-shrink: 0;
+      image-rendering: -webkit-optimize-contrast;
     }
     .broker-details { flex: 1; min-width: 0; }
-    .broker-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--stone); }
-    .broker-name { font-size: 0.78rem; font-weight: 500; color: var(--ink); }
-    .broker-meta { font-size: 0.7rem; color: var(--ink-mute); }
-    .broker-contact-btn {
-      display: inline-flex; align-items: center; gap: 5px;
-      padding: 5px 10px; border-radius: 6px;
-      background: transparent; border: 1px solid var(--border-md);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.7rem; font-weight: 500; color: var(--ink-mid);
-      text-decoration: none; transition: all 0.15s; flex-shrink: 0;
+    .broker-label {
+      font-size: 0.56rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--gold);
+      font-weight: 500;
+      margin-bottom: 1px;
+      white-space: nowrap;
     }
-    .broker-contact-btn:hover { background: var(--warm); }
-    .broker-contact-btn svg { width: 11px; height: 11px; }
+    .broker-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--ink);
+      line-height: 1.1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .broker-meta {
+      font-size: 0.62rem;
+      color: var(--ink-mute);
+      margin-top: 1px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .broker-contact-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--ink);
+      color: var(--white);
+      border-radius: 100px;
+      padding: 5px 11px;
+      font-size: 0.62rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      text-decoration: none;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .broker-contact-btn:hover { background: var(--gold); transform: translateY(-1px); }
+    .broker-contact-btn svg { width: 9px; height: 9px; }
 
     /* NO RESULTS */
     .no-results {
@@ -511,7 +706,7 @@
 <div class="page">
 
   <header>
-    <div class="agent-photo-placeholder">KN</div>
+    <img src="https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/kam_profile_2.png" alt="Kam Norwood" style="width:72px;height:72px;border-radius:50%;object-fit:cover;object-position:center top;border:3px solid #fff;box-shadow:0 8px 32px rgba(28,26,23,0.10);flex-shrink:0;" />
     <div>
       <div class="agent-name">Kam Norwood</div>
       <div class="agent-title">Commercial Real Estate Broker &nbsp;·&nbsp; (520) 360-8510</div>
@@ -701,6 +896,7 @@
     <button class="filter-tab" data-tab="For Sale" onclick="setTab(this,'For Sale')">For Sale</button>
     <button class="filter-tab" data-tab="For Lease" onclick="setTab(this,'For Lease')">For Lease</button>
     <button class="filter-tab" data-tab="For Sale or Lease" onclick="setTab(this,'For Sale or Lease')">Sale or Lease</button>
+    <button class="filter-tab tab-review" data-tab="For Review" onclick="setTab(this,'For Review')">For Review</button>
   </div>
 
   <div class="results-meta" id="results-count"></div>
@@ -726,33 +922,77 @@ const CLIENT = {
   agentTitle: "Commercial Real Estate Broker",
   agentPhone: "(520) 360-8510",
   agentEmail: "knorwood@picor.com",
+  agentPhotoUrl: "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/kam_profile_2.png",
 };
 
 const LISTINGS = [
-  { id:1, address1:"3626 E 47th St", kamListing:true, listingType:"For Sale", address2:"Tucson, AZ 85713", price:"$1,750,000", type:"Industrial / Manufacturing", sqft:"8,800", capRate:"", opportunityZone:false, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/3626%20E.%2047TH%20STREET,%20TUCSON,%20AZ%2085713/3626_east_47th_street/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/3626%20E.%2047TH%20STREET,%20TUCSON,%20AZ%2085713/3626_east_47th_street/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/3626%20E.%2047TH%20STREET,%20TUCSON,%20AZ%2085713/3626_east_47th_street/3.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/3626%20E.%2047TH%20STREET,%20TUCSON,%20AZ%2085713/3626_east_47th_street/4.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/3626%20E.%2047TH%20STREET,%20TUCSON,%20AZ%2085713/3626_east_47th_street/5.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/3626%20E.%2047TH%20STREET,%20TUCSON,%20AZ%2085713/3626_east_47th_street/1.jpg", crexiUrl:"https://www.crexi.com/properties/2496333/arizona-3646-e-47th-st", flyerUrl:"", notes:"Built 2008. Single tenancy. 3 drive-in doors (10′×12′). 16′ clear height. Fenced lot. AC, cooler, storage." },
-  { id:2, address1:"2023 W Price St", kamListing:true, listingType:"For Sale", address2:"Tucson, AZ 85705", price:"$2,750,000", type:"Industrial / Manufacturing", sqft:"6,847", capRate:"6.55%", opportunityZone:false, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/2023_w_price_st/images/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/2023_w_price_st/images/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/2023_w_price_st/images/3.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/2023_w_price_st/images/4.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/2023_w_price_st/images/5.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/2023_w_price_st/images/1.jpg", crexiUrl:"https://www.crexi.com/properties/2477066/arizona-fully-leased-tucson-ios-investment-opportunity", flyerUrl:"", notes:"Fully leased IOS investment. Built 1997. Single tenancy. 3 drive-in doors (12′×12′). 1.14 AC lot. Fenced." },
-  { id:3, address1:"321–327 S Kino Pkwy", kamListing:true, listingType:"For Sale", address2:"Tucson, AZ 85719", price:"$1,400,000", type:"Industrial", sqft:"9,482", capRate:"", opportunityZone:false, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/321-327_south_kino_pkwy/images/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/321-327_south_kino_pkwy/images/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/321-327_south_kino_pkwy/images/3.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/321-327_south_kino_pkwy/images/1.jpg", crexiUrl:"https://www.crexi.com/properties/2344230/arizona-dales-doors", flyerUrl:"", notes:"Dales Doors. Multi-tenant. On-market 96 days." },
-  { id:4, address1:"2856 E Fort Lowell Rd", listingType:"For Sale", address2:"Tucson, AZ 85716", price:"Price Not Disclosed", type:"Retail / Office / Industrial", sqft:"9,202", capRate:"", opportunityZone:false, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/2856_e_fort_lowell_rd/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/2856_e_fort_lowell_rd/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/2856_e_fort_lowell_rd/3.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/2856_e_fort_lowell_rd/1.jpg", crexiUrl:"https://www.crexi.com/properties/2253884/arizona-2856-e-fort-lowell-rd", flyerUrl:"", notes:"Multi-use property. N/A tenancy. On-market 179 days." },
-  { id:5, address1:"5181 S Nogales Hwy", listingType:"For Sale", address2:"Tucson, AZ 85706", price:"$250,000", type:"Retail / Industrial", sqft:"1,050", capRate:"", opportunityZone:true, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/5181_s_nogales_hwy/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/5181_s_nogales_hwy/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/5181_s_nogales_hwy/3.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/5181_s_nogales_hwy/1.jpg", crexiUrl:"https://www.crexi.com/properties/2297488/arizona-2-bay-automotive-shop", flyerUrl:"", notes:"2-Bay Automotive Shop. Opportunity Zone. On-market 153 days." },
-  { id:6, address1:"748 E 16th St", kamListing:true, listingType:"For Lease", address2:"Tucson, AZ 85719", price:"Price Not Disclosed", type:"Industrial / Warehouse", sqft:"9,310", capRate:"", opportunityZone:true, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/748_e_16th_st/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/748_e_16th_st/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/748_e_16th_st/3.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/748_e_16th_st/1.jpg", crexiUrl:"https://www.crexi.com/properties/2415143/arizona-748-e-16th-street", flyerUrl:"", notes:"Built 1965. Vacant, single tenancy. 9,310 SF available. Asking rent $8.40/SF/NNN. 1 dock door. Opportunity Zone." },
-  { id:7, address1:"410 E Fort Lowell Rd", listingType:"For Sale", address2:"Tucson, AZ 85705", price:"$649,000", type:"Industrial / Mixed Use", sqft:"7,294", capRate:"", opportunityZone:false, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/410_e_fort_lowell_rd/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/410_e_fort_lowell_rd/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/410_e_fort_lowell_rd/3.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/410_e_fort_lowell_rd/1.jpg", crexiUrl:"https://www.crexi.com/properties/2332831/arizona-410-e-fort-lowell-rd", flyerUrl:"", notes:"On-market 105 days." },
-  { id:8, address1:"3702 E Hardy Dr", listingType:"For Sale", address2:"Tucson, AZ 85716", price:"$621,075", type:"Industrial / Retail", sqft:"3,549", capRate:"", opportunityZone:false, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3702_e_hardy_dr/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3702_e_hardy_dr/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3702_e_hardy_dr/3.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3702_e_hardy_dr/1.jpg", crexiUrl:"https://www.crexi.com/properties/2306131/arizona-3702-e-hardy-drive", flyerUrl:"", notes:"On-market 144 days. $175/SF." },
-  { id:9, address1:"3122 E Columbia St", listingType:"For Sale", address2:"Tucson, AZ 85714", price:"Price Not Disclosed", type:"Industrial", sqft:"10,000", capRate:"", opportunityZone:false, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3122_e_columbia_st/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3122_e_columbia_st/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3122_e_columbia_st/3.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3122_e_columbia_st/1.jpg", crexiUrl:"https://www.crexi.com/properties/2466283/arizona-lincoln-manufacturing-pg-inc", flyerUrl:"", notes:"Lincoln Manufacturing PG Inc. 22,503 SF lot. On-market 20 days." },
-  { id:10, address1:"821 E 47th St", kamListing:true, listingType:"For Sale or Lease", address2:"Tucson, AZ 85713", price:"$1,500,000", type:"Industrial / Office", sqft:"7,373", capRate:"", opportunityZone:true, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/821_e_47th_st/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/821_e_47th_st/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/821_e_47th_st/3.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/821_e_47th_st/1.jpg", crexiUrl:"https://www.crexi.com/properties/2466114/arizona-821-e-47th-st", flyerUrl:"", notes:"Built 1979. Multi-tenant. 7,373 SF available. $19.00/SF/NNN. 18′ clear height. 4 drive-in doors. Opportunity Zone." },
-  { id:11, address1:"3452 E Milton Rd", kamListing:true, listingType:"For Sale", address2:"Tucson, AZ 85706", price:"$635,000", type:"Retail / Industrial / Special Purpose", sqft:"2,116", capRate:"", opportunityZone:true, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3452%20_e_milton_rd/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3452%20_e_milton_rd/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3452%20_e_milton_rd/3.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3452%20_e_milton_rd/1.jpg", crexiUrl:"https://www.crexi.com/properties/2007335/arizona-milton-road", flyerUrl:"", notes:"Milton Road. 0.22 AC lot. Opportunity Zone. $300/SF. On-market 309 days." },
-  { id:12, address1:"7777 E Valencia Rd", kamListing:true, listingType:"For Sale", address2:"Tucson, AZ 85747", price:"$3,500,000", type:"Industrial / Land", sqft:"4,000", capRate:"", opportunityZone:false, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/7777_e_valencia_rd/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/7777_e_valencia_rd/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/7777_e_valencia_rd/3.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/7777_e_valencia_rd/1.jpg", crexiUrl:"https://www.crexi.com/properties/2250668/arizona-7777-e-valencia-rd", flyerUrl:"", notes:"AZ Conagg. 12.47 AC lot. Built 2000. 4,000 SF available. 14′ clear height. On-market 182 days." },
-  { id:13, address1:"3238 E Columbia St", listingType:"For Sale", address2:"Tucson, AZ 85714", price:"$949,000", type:"Industrial / Manufacturing", sqft:"6,943", capRate:"", opportunityZone:false, imageUrl:"", crexiUrl:"https://www.crexi.com/properties/2357652/arizona-columbia", flyerUrl:"", notes:"Built 1972. Multi-tenant. 10′ clear height. Fenced lot. On-market 83 days." },
-  { id:14, address1:"1425 E Apache Park Pl", listingType:"For Sale", address2:"Tucson, AZ 85714", price:"$840,000", type:"Industrial", sqft:"6,000", capRate:"", opportunityZone:true, imageUrl:"", crexiUrl:"https://www.crexi.com/properties/2478289/arizona-1425-e-apache-park-pl", flyerUrl:"", notes:"Multi-tenant. 0.56 AC lot. Opportunity Zone. On-market 14 days." },
-  { id:15, address1:"3208 E District St", kamListing:true, listingType:"For Sale or Lease", address2:"Tucson, AZ 85714", price:"$625,000", type:"Industrial / Warehouse", sqft:"5,900", capRate:"", opportunityZone:false, imageUrl:"", crexiUrl:"https://www.crexi.com/properties/2335229/arizona-3208-e-district-st-palo-verde-industrial-flex", flyerUrl:"", notes:"Palo Verde Industrial Flex. Built 2002. 1,700–5,900 SF available. $10.40/SF/MG. 5 drive-ins. AC, mezzanine, fenced yard." },
-  { id:16, address1:"7940 S Kolb Rd", kamListing:true, listingType:"For Lease", address2:"Tucson, AZ 85756", price:"Price Not Disclosed", type:"Industrial / Manufacturing", sqft:"9,000", capRate:"", opportunityZone:false, imageUrl:"", crexiUrl:"https://www.crexi.com/properties/2316907/arizona-7940-s-kolb-road", flyerUrl:"", notes:"Built 1974. Single tenancy. 9,000 SF available. 16′ clear height. 2 drive-ins (12′×14′). 2.96 AC lot. Fenced." },
-  { id:17, address1:"960 E 17th St", kamListing:true, listingType:"For Sale", address2:"Tucson, AZ 85719", price:"$1,079,750", type:"Industrial / Warehouse", sqft:"8,637", capRate:"", opportunityZone:true, imageUrl:"", crexiUrl:"https://www.crexi.com/properties/2461803/arizona-960-e-17th-street", flyerUrl:"", notes:"17th Street Red Brick Showroom/Warehouse. Vacant. 19,360 SF lot. $125/SF. Opportunity Zone." },
-  { id:18, address1:"1750 W Roger Rd", listingType:"For Sale", address2:"Tucson, AZ 85705", price:"Price Not Disclosed", type:"Industrial", sqft:"3,266", capRate:"", opportunityZone:false, imageUrl:"", crexiUrl:"https://www.crexi.com/properties/1469526/arizona-1750-w-roger-road", flyerUrl:"", notes:"Single tenant. 0.9 AC lot. On-market 792 days." },
-  { id:19, address1:"1140 N Rosemont Blvd", listingType:"For Sale", address2:"Tucson, AZ 85712", price:"$1,195,600", type:"Retail / Office / Industrial", sqft:"5,707", capRate:"", opportunityZone:false, imageUrl:"", crexiUrl:"https://www.crexi.com/properties/2193266/arizona-1140-n-rosemont-blvd", flyerUrl:"", notes:"Vacant. 1 unit. $209.57/SF. On-market 224 days." },
-  { id:20, address1:"4004 N Romero Rd", listingType:"For Sale", address2:"Tucson, AZ 85705", price:"$375,000", type:"Industrial / Mixed Use / Office", sqft:"3,900", capRate:"", opportunityZone:false, imageUrl:"", crexiUrl:"https://www.crexi.com/properties/2254756/arizona-4004-n-romero-road", flyerUrl:"", notes:"Multi-tenant. 2 units. 0.428 AC lot. $96.15/SF. On-market 179 days." },
-  { id:21, address1:"4164 N Flowing Wells Rd", listingType:"For Sale or Lease", address2:"Tucson, AZ 85705", price:"$390,000", type:"Industrial / Office / Retail", sqft:"2,996", capRate:"", opportunityZone:false, imageUrl:"", crexiUrl:"https://www.crexi.com/properties/1923164/arizona-1640-sf-industrial-office-space-for-lease-or-sale", flyerUrl:"", notes:"Built 1955. Vacant. 0.37 AC lot. AC, fenced yard. On-market 369 days." },
-  { id:22, address1:"313 N Country Club Rd", listingType:"For Sale", address2:"Tucson, AZ 85716", price:"$215,000", type:"Industrial", sqft:"1", capRate:"", opportunityZone:false, imageUrl:"", crexiUrl:"https://www.crexi.com/properties/1326899/arizona-313-n-country-club-rd", flyerUrl:"", notes:"Single tenant. On-market 906 days." },
-  { id:23, address1:"530 N 7th Ave", listingType:"For Sale", address2:"Tucson, AZ 85705", price:"$995,000", type:"Industrial", sqft:"8,800", capRate:"", opportunityZone:false, imageUrl:"", crexiUrl:"https://www.crexi.com/properties/1558096/arizona-730-740-n-7th-avenue", flyerUrl:"", notes:"530–540 N 7th Ave. 0.56 AC lot. $113/SF. On-market 700 days." },
-  { id:24, address1:"3365 N Dodge Blvd", listingType:"For Sale", address2:"Tucson, AZ 85716", price:"$485,000", type:"Industrial / Mixed Use / Office", sqft:"2,384", capRate:"", opportunityZone:false, imageUrl:"", crexiUrl:"https://www.crexi.com/properties/1888516/arizona-printex-building", flyerUrl:"", notes:"Printex Building. 1 unit. $203/SF. On-market 400 days." },
+  { id:1, kamOnly:true, address1:"3626 E 47th St", kamListing:true, listingType:"For Sale", address2:"Tucson, AZ 85713", price:"$1,750,000", type:"Industrial / Manufacturing", sqft:"8,800", capRate:"", opportunityZone:false, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/3626%20E.%2047TH%20STREET,%20TUCSON,%20AZ%2085713/3626_east_47th_street/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/3626%20E.%2047TH%20STREET,%20TUCSON,%20AZ%2085713/3626_east_47th_street/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/3626%20E.%2047TH%20STREET,%20TUCSON,%20AZ%2085713/3626_east_47th_street/3.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/3626%20E.%2047TH%20STREET,%20TUCSON,%20AZ%2085713/3626_east_47th_street/4.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/3626%20E.%2047TH%20STREET,%20TUCSON,%20AZ%2085713/3626_east_47th_street/5.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/3626%20E.%2047TH%20STREET,%20TUCSON,%20AZ%2085713/3626_east_47th_street/1.jpg", crexiUrl:"", flyerUrl:"", notes:"Built 2008. Single tenancy. 3 drive-in doors (10′×12′). 16′ clear height. Fenced lot. AC, cooler, storage." },
+  { id:2, kamOnly:true, address1:"2023 W Price St", kamListing:true, listingType:"For Sale", address2:"Tucson, AZ 85705", price:"$2,750,000", type:"Industrial / Manufacturing", sqft:"6,847", capRate:"6.55%", opportunityZone:false, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/2023_w_price_st/images/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/2023_w_price_st/images/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/2023_w_price_st/images/3.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/2023_w_price_st/images/4.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/2023_w_price_st/images/5.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/2023_w_price_st/images/1.jpg", crexiUrl:"", flyerUrl:"", notes:"Fully leased IOS investment. Built 1997. Single tenancy. 3 drive-in doors (12′×12′). 1.14 AC lot. Fenced." },
+  { id:3, kamOnly:true, address1:"321–327 S Kino Pkwy", kamListing:true, listingType:"For Sale", address2:"Tucson, AZ 85719", price:"$1,400,000", type:"Industrial", sqft:"9,482", capRate:"", opportunityZone:false, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/321-327_south_kino_pkwy/images/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/321-327_south_kino_pkwy/images/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/321-327_south_kino_pkwy/images/3.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/321-327_south_kino_pkwy/images/1.jpg", crexiUrl:"", flyerUrl:"", notes:"Dales Doors. Multi-tenant. On-market 96 days." },
+  { id:4, forReview:true, address1:"2856 E Fort Lowell Rd", listingType:"For Sale", address2:"Tucson, AZ 85716", price:"Price Not Disclosed", type:"Retail / Office / Industrial", sqft:"9,202", capRate:"", opportunityZone:false, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/2856_e_fort_lowell_rd/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/2856_e_fort_lowell_rd/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/2856_e_fort_lowell_rd/3.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/2856_e_fort_lowell_rd/1.jpg", crexiUrl:"", flyerUrl:"", notes:"Multi-use property. N/A tenancy. On-market 179 days." },
+  { id:5, forReview:true, address1:"5181 S Nogales Hwy", listingType:"For Sale", address2:"Tucson, AZ 85706", price:"$250,000", type:"Retail / Industrial", sqft:"1,050", capRate:"", opportunityZone:true, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/5181_s_nogales_hwy/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/5181_s_nogales_hwy/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/5181_s_nogales_hwy/3.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/5181_s_nogales_hwy/1.jpg", crexiUrl:"", flyerUrl:"", notes:"2-Bay Automotive Shop. Opportunity Zone. On-market 153 days." },
+  { id:6, kamOnly:true, address1:"748 E 16th St", kamListing:true, listingType:"For Lease", address2:"Tucson, AZ 85719", price:"Price Not Disclosed", type:"Industrial / Warehouse", sqft:"9,310", capRate:"", opportunityZone:true, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/748_e_16th_st/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/748_e_16th_st/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/748_e_16th_st/3.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/748_e_16th_st/1.jpg", crexiUrl:"https://www.crexi.com/properties/2415143/arizona-748-e-16th-street", flyerUrl:"", notes:"Built 1965. Vacant, single tenancy. 9,310 SF available. Asking rent $8.40/SF/NNN. 1 dock door. Opportunity Zone." },
+  { id:7, forReview:true, address1:"410 E Fort Lowell Rd", listingType:"For Sale", address2:"Tucson, AZ 85705", price:"$649,000", type:"Industrial / Mixed Use", sqft:"7,294", capRate:"", opportunityZone:false, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/410_e_fort_lowell_rd/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/410_e_fort_lowell_rd/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/410_e_fort_lowell_rd/3.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/410_e_fort_lowell_rd/1.jpg", crexiUrl:"", flyerUrl:"", notes:"On-market 105 days." },
+  { id:8, forReview:true, address1:"3702 E Hardy Dr", listingType:"For Sale", address2:"Tucson, AZ 85716", price:"$621,075", type:"Industrial / Retail", sqft:"3,549", capRate:"", opportunityZone:false, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3702_e_hardy_dr/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3702_e_hardy_dr/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3702_e_hardy_dr/3.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3702_e_hardy_dr/1.jpg", crexiUrl:"", flyerUrl:"", notes:"On-market 144 days. $175/SF." },
+  { id:9, forReview:true, address1:"3122 E Columbia St", listingType:"For Sale", address2:"Tucson, AZ 85714", price:"Price Not Disclosed", type:"Industrial", sqft:"10,000", capRate:"", opportunityZone:false, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3122_e_columbia_st/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3122_e_columbia_st/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3122_e_columbia_st/3.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3122_e_columbia_st/1.jpg", crexiUrl:"", flyerUrl:"", notes:"Lincoln Manufacturing PG Inc. 22,503 SF lot. On-market 20 days." },
+  { id:10, kamOnly:true, address1:"821 E 47th St", kamListing:true, listingType:"For Sale or Lease", address2:"Tucson, AZ 85713", price:"$1,500,000", type:"Industrial / Office", sqft:"7,373", capRate:"", opportunityZone:true, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/821_e_47th_st/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/821_e_47th_st/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/821_e_47th_st/3.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/821_e_47th_st/1.jpg", crexiUrl:"https://www.crexi.com/properties/2466114/arizona-821-e-47th-st", flyerUrl:"", notes:"Built 1979. Multi-tenant. 7,373 SF available. $19.00/SF/NNN. 18′ clear height. 4 drive-in doors. Opportunity Zone." },
+  { id:11, kamOnly:true, address1:"3452 E Milton Rd", kamListing:true, listingType:"For Sale", address2:"Tucson, AZ 85706", price:"$635,000", type:"Retail / Industrial / Special Purpose", sqft:"2,116", capRate:"", opportunityZone:true, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3452%20_e_milton_rd/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3452%20_e_milton_rd/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3452%20_e_milton_rd/3.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3452%20_e_milton_rd/1.jpg", crexiUrl:"", flyerUrl:"", notes:"Milton Road. 0.22 AC lot. Opportunity Zone. $300/SF. On-market 309 days." },
+  { id:12, kamOnly:true, address1:"7777 E Valencia Rd", kamListing:true, listingType:"For Sale", address2:"Tucson, AZ 85747", price:"$3,500,000", type:"Industrial / Land", sqft:"4,000", capRate:"", opportunityZone:false, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/7777_e_valencia_rd/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/7777_e_valencia_rd/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/7777_e_valencia_rd/3.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/7777_e_valencia_rd/1.jpg", crexiUrl:"", flyerUrl:"", notes:"AZ Conagg. 12.47 AC lot. Built 2000. 4,000 SF available. 14′ clear height. On-market 182 days." },
+  { id:13, forReview:true, address1:"3238 E Columbia St", listingType:"For Sale", address2:"Tucson, AZ 85714", price:"$949,000", type:"Industrial / Manufacturing", sqft:"6,943", capRate:"", opportunityZone:false, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3238_e_columbia_st/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3238_e_columbia_st/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3238_e_columbia_st/3.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3238_e_columbia_st/4.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3238_e_columbia_st/5.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3238_e_columbia_st/6.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3238_e_columbia_st/7.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3238_e_columbia_st/8.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3238_e_columbia_st/9.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3238_e_columbia_st/10.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3238_e_columbia_st/11.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3238_e_columbia_st/12.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3238_e_columbia_st/13.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3238_e_columbia_st/14.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3238_e_columbia_st/15.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3238_e_columbia_st/16.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3238_e_columbia_st/17.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3238_e_columbia_st/18.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3238_e_columbia_st/19.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3238_e_columbia_st/20.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3238_e_columbia_st/21.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3238_e_columbia_st/22.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3238_e_columbia_st/23.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3238_e_columbia_st/24.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3238_e_columbia_st/25.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3238_e_columbia_st/26.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3238_e_columbia_st/27.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3238_e_columbia_st/28.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3238_e_columbia_st/29.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3238_e_columbia_st/30.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3238_e_columbia_st/1.jpg", crexiUrl:"", flyerUrl:"", notes:"Built 1972. Multi-tenant. 10′ clear height. Fenced lot. On-market 83 days." },
+  { id:14, forReview:true, address1:"1425 E Apache Park Pl", listingType:"For Sale", address2:"Tucson, AZ 85714", price:"$840,000", type:"Industrial", sqft:"6,000", capRate:"", opportunityZone:true, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1425_e_apache_park_pl/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1425_e_apache_park_pl/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1425_e_apache_park_pl/3.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1425_e_apache_park_pl/4.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1425_e_apache_park_pl/5.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1425_e_apache_park_pl/6.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1425_e_apache_park_pl/7.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1425_e_apache_park_pl/1.jpg", crexiUrl:"", flyerUrl:"", notes:"Multi-tenant. 0.56 AC lot. Opportunity Zone. On-market 14 days." },
+  { id:15, kamOnly:true, address1:"3208 E District St", kamListing:true, listingType:"For Sale or Lease", address2:"Tucson, AZ 85714", price:"$625,000", type:"Industrial / Warehouse", sqft:"5,900", capRate:"", opportunityZone:false, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3208_e_district_st/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3208_e_district_st/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3208_e_district_st/3.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3208_e_district_st/4.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3208_e_district_st/5.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3208_e_district_st/6.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3208_e_district_st/7.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3208_e_district_st/8.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3208_e_district_st/9.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3208_e_district_st/10.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3208_e_district_st/11.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3208_e_district_st/12.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3208_e_district_st/13.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3208_e_district_st/14.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3208_e_district_st/15.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3208_e_district_st/16.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3208_e_district_st/17.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3208_e_district_st/18.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3208_e_district_st/19.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3208_e_district_st/20.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3208_e_district_st/21.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3208_e_district_st/22.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3208_e_district_st/23.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3208_e_district_st/24.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3208_e_district_st/25.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3208_e_district_st/26.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3208_e_district_st/27.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3208_e_district_st/1.jpg", crexiUrl:"https://www.crexi.com/properties/2335229/arizona-3208-e-district-st-palo-verde-industrial-flex", flyerUrl:"", notes:"Palo Verde Industrial Flex. Built 2002. 1,700–5,900 SF available. $10.40/SF/MG. 5 drive-ins. AC, mezzanine, fenced yard." },
+  { id:16, kamOnly:true, address1:"7940 S Kolb Rd", kamListing:true, listingType:"For Lease", address2:"Tucson, AZ 85756", price:"Price Not Disclosed", type:"Industrial / Manufacturing", sqft:"9,000", capRate:"", opportunityZone:false, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/7940_s_kolb_rd/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/7940_s_kolb_rd/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/7940_s_kolb_rd/3.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/7940_s_kolb_rd/1.jpg", crexiUrl:"https://www.crexi.com/properties/2316907/arizona-7940-s-kolb-road", flyerUrl:"", notes:"Built 1974. Single tenancy. 9,000 SF available. 16′ clear height. 2 drive-ins (12′×14′). 2.96 AC lot. Fenced." },
+  { id:17, kamOnly:true, address1:"960 E 17th St", kamListing:true, listingType:"For Sale", address2:"Tucson, AZ 85719", price:"$1,079,750", type:"Industrial / Warehouse", sqft:"8,637", capRate:"", opportunityZone:true, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/960_e_17th_st/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/960_e_17th_st/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/960_e_17th_st/3.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/960_e_17th_st/4.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/960_e_17th_st/5.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/960_e_17th_st/6.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/960_e_17th_st/7.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/960_e_17th_st/8.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/960_e_17th_st/9.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/960_e_17th_st/10.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/960_e_17th_st/11.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/960_e_17th_st/12.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/960_e_17th_st/13.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/960_e_17th_st/14.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/960_e_17th_st/15.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/960_e_17th_st/16.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/960_e_17th_st/17.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/960_e_17th_st/18.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/960_e_17th_st/19.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/960_e_17th_st/20.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/960_e_17th_st/21.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/960_e_17th_st/22.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/960_e_17th_st/23.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/960_e_17th_st/24.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/960_e_17th_st/25.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/960_e_17th_st/26.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/960_e_17th_st/27.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/960_e_17th_st/28.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/960_e_17th_st/29.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/960_e_17th_st/30.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/960_e_17th_st/1.jpg", crexiUrl:"", flyerUrl:"", notes:"17th Street Red Brick Showroom/Warehouse. Vacant. 19,360 SF lot. $125/SF. Opportunity Zone." },
+  { id:18, forReview:true, address1:"1750 W Roger Rd", listingType:"For Sale", address2:"Tucson, AZ 85705", price:"Price Not Disclosed", type:"Industrial", sqft:"3,266", capRate:"", opportunityZone:false, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1750_w_roger_rd/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1750_w_roger_rd/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1750_w_roger_rd/3.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1750_w_roger_rd/4.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1750_w_roger_rd/5.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1750_w_roger_rd/6.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1750_w_roger_rd/7.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1750_w_roger_rd/8.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1750_w_roger_rd/9.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1750_w_roger_rd/10.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1750_w_roger_rd/11.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1750_w_roger_rd/12.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1750_w_roger_rd/13.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1750_w_roger_rd/14.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1750_w_roger_rd/15.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1750_w_roger_rd/16.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1750_w_roger_rd/17.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1750_w_roger_rd/18.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1750_w_roger_rd/19.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1750_w_roger_rd/20.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1750_w_roger_rd/21.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1750_w_roger_rd/22.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1750_w_roger_rd/23.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1750_w_roger_rd/24.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1750_w_roger_rd/25.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1750_w_roger_rd/26.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1750_w_roger_rd/27.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1750_w_roger_rd/28.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1750_w_roger_rd/29.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1750_w_roger_rd/30.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1750_w_roger_rd/1.jpg", crexiUrl:"", flyerUrl:"", notes:"Single tenant. 0.9 AC lot. On-market 792 days." },
+  { id:19, forReview:true, address1:"1140 N Rosemont Blvd", listingType:"For Sale", address2:"Tucson, AZ 85712", price:"$1,195,600", type:"Retail / Office / Industrial", sqft:"5,707", capRate:"", opportunityZone:false, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1140_n_rosemont_blvd/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1140_n_rosemont_blvd/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1140_n_rosemont_blvd/3.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1140_n_rosemont_blvd/4.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1140_n_rosemont_blvd/5.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1140_n_rosemont_blvd/6.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1140_n_rosemont_blvd/7.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1140_n_rosemont_blvd/8.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1140_n_rosemont_blvd/9.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1140_n_rosemont_blvd/10.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1140_n_rosemont_blvd/11.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1140_n_rosemont_blvd/12.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1140_n_rosemont_blvd/13.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1140_n_rosemont_blvd/14.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1140_n_rosemont_blvd/15.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1140_n_rosemont_blvd/16.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1140_n_rosemont_blvd/17.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1140_n_rosemont_blvd/18.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1140_n_rosemont_blvd/19.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/1140_n_rosemont_blvd/1.jpg", crexiUrl:"", flyerUrl:"", notes:"Vacant. 1 unit. $209.57/SF. On-market 224 days." },
+  { id:20, forReview:true, address1:"4004 N Romero Rd", listingType:"For Sale", address2:"Tucson, AZ 85705", price:"$375,000", type:"Industrial / Mixed Use / Office", sqft:"3,900", capRate:"", opportunityZone:false, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4004_n_romero_rd/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4004_n_romero_rd/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4004_n_romero_rd/3.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4004_n_romero_rd/4.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4004_n_romero_rd/5.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4004_n_romero_rd/6.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4004_n_romero_rd/7.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4004_n_romero_rd/8.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4004_n_romero_rd/9.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4004_n_romero_rd/10.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4004_n_romero_rd/11.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4004_n_romero_rd/12.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4004_n_romero_rd/13.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4004_n_romero_rd/14.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4004_n_romero_rd/15.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4004_n_romero_rd/16.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4004_n_romero_rd/17.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4004_n_romero_rd/18.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4004_n_romero_rd/19.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4004_n_romero_rd/20.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4004_n_romero_rd/21.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4004_n_romero_rd/22.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4004_n_romero_rd/23.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4004_n_romero_rd/24.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4004_n_romero_rd/25.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4004_n_romero_rd/26.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4004_n_romero_rd/27.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4004_n_romero_rd/28.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4004_n_romero_rd/29.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4004_n_romero_rd/30.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4004_n_romero_rd/1.jpg", crexiUrl:"", flyerUrl:"", notes:"Multi-tenant. 2 units. 0.428 AC lot. $96.15/SF. On-market 179 days." },
+  { id:21, address1:"4164 N Flowing Wells Rd", listingType:"For Sale or Lease", address2:"Tucson, AZ 85705", price:"$390,000", type:"Industrial / Office / Retail", sqft:"2,996", capRate:"", opportunityZone:false, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4164_n_flowing_wells_rd/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4164_n_flowing_wells_rd/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4164_n_flowing_wells_rd/3.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4164_n_flowing_wells_rd/4.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4164_n_flowing_wells_rd/1.jpg", crexiUrl:"https://www.crexi.com/properties/1923164/arizona-1640-sf-industrial-office-space-for-lease-or-sale", flyerUrl:"", notes:"Built 1955. Vacant. 0.37 AC lot. AC, fenced yard. On-market 369 days." },
+  { id:22, forReview:true, address1:"313 N Country Club Rd", listingType:"For Sale", address2:"Tucson, AZ 85716", price:"$215,000", type:"Industrial", sqft:"1", capRate:"", opportunityZone:false, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/313_n_country_club_rd/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/313_n_country_club_rd/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/313_n_country_club_rd/3.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/313_n_country_club_rd/4.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/313_n_country_club_rd/5.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/313_n_country_club_rd/6.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/313_n_country_club_rd/7.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/313_n_country_club_rd/8.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/313_n_country_club_rd/9.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/313_n_country_club_rd/10.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/313_n_country_club_rd/11.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/313_n_country_club_rd/12.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/313_n_country_club_rd/13.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/313_n_country_club_rd/14.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/313_n_country_club_rd/15.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/313_n_country_club_rd/16.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/313_n_country_club_rd/17.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/313_n_country_club_rd/18.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/313_n_country_club_rd/19.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/313_n_country_club_rd/20.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/313_n_country_club_rd/21.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/313_n_country_club_rd/22.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/313_n_country_club_rd/23.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/313_n_country_club_rd/24.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/313_n_country_club_rd/25.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/313_n_country_club_rd/26.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/313_n_country_club_rd/27.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/313_n_country_club_rd/28.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/313_n_country_club_rd/29.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/313_n_country_club_rd/30.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/313_n_country_club_rd/1.jpg", crexiUrl:"", flyerUrl:"", notes:"Single tenant. On-market 906 days." },
+  { id:23, forReview:true, address1:"530 N 7th Ave", listingType:"For Sale", address2:"Tucson, AZ 85705", price:"$995,000", type:"Industrial", sqft:"8,800", capRate:"", opportunityZone:false, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/530_n_7th_ave/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/530_n_7th_ave/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/530_n_7th_ave/3.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/530_n_7th_ave/4.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/530_n_7th_ave/5.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/530_n_7th_ave/6.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/530_n_7th_ave/7.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/530_n_7th_ave/8.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/530_n_7th_ave/9.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/530_n_7th_ave/10.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/530_n_7th_ave/11.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/530_n_7th_ave/12.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/530_n_7th_ave/13.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/530_n_7th_ave/14.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/530_n_7th_ave/15.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/530_n_7th_ave/16.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/530_n_7th_ave/17.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/530_n_7th_ave/18.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/530_n_7th_ave/19.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/530_n_7th_ave/20.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/530_n_7th_ave/21.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/530_n_7th_ave/22.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/530_n_7th_ave/23.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/530_n_7th_ave/24.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/530_n_7th_ave/25.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/530_n_7th_ave/26.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/530_n_7th_ave/27.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/530_n_7th_ave/28.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/530_n_7th_ave/29.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/530_n_7th_ave/30.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/530_n_7th_ave/1.jpg", crexiUrl:"", flyerUrl:"", notes:"530–540 N 7th Ave. 0.56 AC lot. $113/SF. On-market 700 days." },
+  { id:24, forReview:true, address1:"3365 N Dodge Blvd", listingType:"For Sale", address2:"Tucson, AZ 85716", price:"$485,000", type:"Industrial / Mixed Use / Office", sqft:"2,384", capRate:"", opportunityZone:false, images:["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3365_n_dodge_blvd/1.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3365_n_dodge_blvd/2.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3365_n_dodge_blvd/3.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3365_n_dodge_blvd/4.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3365_n_dodge_blvd/5.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3365_n_dodge_blvd/6.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3365_n_dodge_blvd/7.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3365_n_dodge_blvd/8.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3365_n_dodge_blvd/9.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3365_n_dodge_blvd/10.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3365_n_dodge_blvd/11.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3365_n_dodge_blvd/12.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3365_n_dodge_blvd/13.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3365_n_dodge_blvd/14.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3365_n_dodge_blvd/15.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3365_n_dodge_blvd/16.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3365_n_dodge_blvd/17.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3365_n_dodge_blvd/18.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3365_n_dodge_blvd/19.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3365_n_dodge_blvd/20.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3365_n_dodge_blvd/21.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3365_n_dodge_blvd/22.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3365_n_dodge_blvd/23.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3365_n_dodge_blvd/24.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3365_n_dodge_blvd/25.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3365_n_dodge_blvd/26.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3365_n_dodge_blvd/27.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3365_n_dodge_blvd/28.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3365_n_dodge_blvd/29.jpg","https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3365_n_dodge_blvd/30.jpg"], imageUrl:"https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/3365_n_dodge_blvd/1.jpg", crexiUrl:"", flyerUrl:"", notes:"Printex Building. 1 unit. $203/SF. On-market 400 days." },
+  { id:25, address1:"244 W Drachman St", listingType:"For Sale", address2:"Tucson, AZ 85705", price:"$499,999", type:"Office", sqft:"4,065", capRate:"", opportunityZone:true, images:[], imageUrl:"", crexiUrl:"https://www.crexi.com/properties/2147514", flyerUrl:"", notes:"Office space. Opportunity Zone." },
+  { id:26, address1:"5500 Block E I-10 Frontage Rd", listingType:"For Sale", address2:"Tucson, AZ 85756", price:"$1,990,857", type:"Land", sqft:"", capRate:"", opportunityZone:false, images:[], imageUrl:"", crexiUrl:"https://www.crexi.com/properties/1032725", flyerUrl:"", notes:"Vacant Land. 8.31 Acres — Lots 1-11." },
+  { id:27, address1:"7800 E Benson Highway", listingType:"For Sale", address2:"Tucson, AZ 85756", price:"$1,320,000", type:"Land", sqft:"", capRate:"", opportunityZone:false, images:[], imageUrl:"", crexiUrl:"https://www.crexi.com/properties/1309023", flyerUrl:"", notes:"Land. 5.5 acres." },
+  { id:28, forReview:true, address1:"5050 & 5056 E Speedway Blvd", listingType:"For Sale", address2:"Tucson, AZ 85712", price:"$975,000", type:"Land", sqft:"", capRate:"", opportunityZone:false, images:[], imageUrl:"", crexiUrl:"", flyerUrl:"", notes:"Land. 0.69 acres." },
+  { id:29, address1:"4915 E Speedway Blvd", listingType:"For Sale", address2:"Tucson, AZ 85712", price:"Price Not Disclosed", type:"Land", sqft:"", capRate:"", opportunityZone:false, images:[], imageUrl:"", crexiUrl:"https://www.crexi.com/properties/2319059", flyerUrl:"", notes:"Land. 1.59 acres." },
+  { id:30, address1:"3838 E Fort Lowell Rd", listingType:"For Sale", address2:"Tucson, AZ 85716", price:"$679,000", type:"Office", sqft:"3,663", capRate:"7.50%", opportunityZone:false, images:[], imageUrl:"", crexiUrl:"https://www.crexi.com/properties/2147516", flyerUrl:"", notes:"Office. 7.50% CAP rate." },
+  { id:31, address1:"275 W Adams St", listingType:"For Sale", address2:"Tucson, AZ 85705", price:"$165,000", type:"Land", sqft:"", capRate:"", opportunityZone:true, images:[], imageUrl:"", crexiUrl:"https://www.crexi.com/properties/2147522", flyerUrl:"", notes:"Land. 0.164 acres. Opportunity Zone." },
+  { id:32, address1:"3380 E Michigan St", listingType:"For Sale", address2:"Tucson, AZ 85714", price:"$2,500,000", type:"Land", sqft:"", capRate:"", opportunityZone:false, images:[], imageUrl:"", crexiUrl:"https://www.crexi.com/properties/2147542", flyerUrl:"", notes:"Land. 4.17 acres." },
+  { id:33, address1:"3001 S Cottonwood Lane", listingType:"For Sale", address2:"Tucson, AZ 85713", price:"$1,299,999", type:"Land", sqft:"", capRate:"", opportunityZone:false, images:[], imageUrl:"", crexiUrl:"https://www.crexi.com/properties/2188445", flyerUrl:"", notes:"Land. 10.28 acres." },
+  { id:34, address1:"1702 W Anklam Rd, Suite 111", listingType:"For Sale", address2:"Tucson, AZ 85745", price:"Price Not Disclosed", type:"Office", sqft:"1,192", capRate:"", opportunityZone:false, images:[], imageUrl:"", crexiUrl:"https://www.crexi.com/properties/2466576", flyerUrl:"", notes:"Office space." },
+  { id:35, address1:"Benson Highway & I-10", listingType:"For Sale", address2:"Tucson, AZ 85713", price:"Price Not Disclosed", type:"Land", sqft:"", capRate:"", opportunityZone:false, images:[], imageUrl:"", crexiUrl:"https://www.crexi.com/properties/2530199", flyerUrl:"", notes:"Land. Benson Highway/I-10 corridor." },
+  { id:36, address1:"NE Corner of Trekell & I-8", listingType:"For Sale", address2:"Casa Grande, AZ 85193", price:"Price Not Disclosed", type:"Land", sqft:"", capRate:"", opportunityZone:false, images:[], imageUrl:"", crexiUrl:"https://www.crexi.com/properties/2502540", flyerUrl:"", notes:"Land. 40.16 acres." },
+  { id:37, address1:"601 W Simpson St & 630 W 18th St", listingType:"For Sale", address2:"Tucson, AZ 85745", price:"Price Not Disclosed", type:"Land", sqft:"", capRate:"", opportunityZone:false, images:[], imageUrl:"", crexiUrl:"https://www.crexi.com/properties/2569558", flyerUrl:"", notes:"Land. 3.0 AC + 2.69 AC + 5.59 AC." },
+  { id:63, address1:"Bambi Bar", listingType:"For Sale", address2:"Tucson, AZ", price:"Price Not Disclosed", type:"Special Purpose", sqft:"", capRate:"", opportunityZone:false, images:[], imageUrl:"", crexiUrl:"https://www.crexi.com/properties/1460498", flyerUrl:"", notes:"Bambi Bar." },
+  { id:64, address1:"3380 E Michigan St", listingType:"For Sale", address2:"Tucson, AZ 85714", price:"Price Not Disclosed", type:"Land", sqft:"", capRate:"", opportunityZone:false, images:[], imageUrl:"", crexiUrl:"https://www.crexi.com/properties/1923134", flyerUrl:"", notes:"Land. 4.17 acres." },
+  { id:65, address1:"244 W Drachman St", listingType:"For Sale", address2:"Tucson, AZ 85705", price:"Price Not Disclosed", type:"Office", sqft:"4,065", capRate:"", opportunityZone:true, images:[], imageUrl:"", crexiUrl:"https://www.crexi.com/properties/1734921", flyerUrl:"", notes:"Office space. Opportunity Zone." },
+
+  { id:38, forReview:true, address1:"2080 E Beverly Dr", listingType:"For Lease", address2:"Tucson, AZ 85719", price:"$0.90/SF/MO", type:"Industrial", sqft:"8,858", capRate:"", opportunityZone:false, images:[], imageUrl:"", crexiUrl:"", flyerUrl:"", notes:"Industrial. 1 space available." },
+  { id:39, forReview:true, address1:"Central City Business Park", listingType:"For Lease", address2:"Tucson, AZ 85719", price:"$0.95/SF/MO", type:"Industrial", sqft:"4,615", capRate:"", opportunityZone:false, images:[], imageUrl:"", crexiUrl:"", flyerUrl:"", notes:"325 S Euclid Avenue. 1 space available." },
+  { id:40, address1:"6898-6910 N Camino Martin", listingType:"For Lease", address2:"Tucson, AZ 85741", price:"$1.20/SF/MO", type:"Industrial", sqft:"", capRate:"", opportunityZone:false, images:[], imageUrl:"", crexiUrl:"https://www.crexi.com/lease/properties/1048194", flyerUrl:"", notes:"4 spaces available." },
+  { id:41, address1:"Tucson Tech Park", listingType:"For Lease", address2:"Tucson, AZ 85719", price:"Price Not Disclosed", type:"Industrial", sqft:"1,220", capRate:"", opportunityZone:false, images:[], imageUrl:"", crexiUrl:"https://www.crexi.com/lease/properties/1048194", flyerUrl:"", notes:"1660 & 1662 E Winsett St. 4 spaces available." },
+  { id:42, address1:"3690-3700 S Palo Verde Rd", listingType:"For Lease", address2:"Tucson, AZ 85713", price:"$0.95/SF/MO", type:"Industrial", sqft:"9,438", capRate:"", opportunityZone:false, images:[], imageUrl:"", crexiUrl:"https://www.crexi.com/lease/properties/1048194", flyerUrl:"", notes:"1 space available." },
+  { id:43, address1:"3778 E 43rd Place", listingType:"For Lease", address2:"Tucson, AZ 85713", price:"$1.40/SF/MO", type:"Industrial", sqft:"6,525", capRate:"", opportunityZone:false, images:[], imageUrl:"", crexiUrl:"https://www.crexi.com/lease/properties/1048194", flyerUrl:"", notes:"1 space available." },
+  { id:44, address1:"Park/Ajo Commerce Center", listingType:"For Lease", address2:"Tucson, AZ 85713", price:"$0.72/SF/MO", type:"Industrial", sqft:"10,000", capRate:"", opportunityZone:false, images:[], imageUrl:"", crexiUrl:"https://www.crexi.com/lease/properties/1048194", flyerUrl:"", notes:"3770 S Park Avenue. 1 space available." },
+  { id:45, address1:"Old Vail Commerce Center", listingType:"For Lease", address2:"Tucson, AZ 85747", price:"Price Not Disclosed", type:"Industrial", sqft:"55,800", capRate:"", opportunityZone:false, images:[], imageUrl:"", crexiUrl:"https://www.crexi.com/lease/properties/1048194", flyerUrl:"", notes:"8374 E Old Vail Rd. 8 spaces available." },
+  { id:46, address1:"Ajo/Evans Business Park", listingType:"For Lease", address2:"Tucson, AZ 85713", price:"$1.20/SF/MO", type:"Industrial", sqft:"811", capRate:"", opportunityZone:false, images:[], imageUrl:"", crexiUrl:"https://www.crexi.com/lease/properties/1048194", flyerUrl:"", notes:"1100 & 1200 E Ajo Way. 4 spaces available." },
+  { id:47, address1:"3763 E 43rd Place", listingType:"For Lease", address2:"Tucson, AZ 85713", price:"Price Not Disclosed", type:"Industrial", sqft:"", capRate:"", opportunityZone:false, images:[], imageUrl:"", crexiUrl:"https://www.crexi.com/lease/properties/1048194", flyerUrl:"", notes:"1 space available." },
+  { id:48, address1:"3450 S Broadmoor Dr", listingType:"For Lease", address2:"Tucson, AZ 85713", price:"$0.80/SF/MO", type:"Industrial", sqft:"5,150", capRate:"", opportunityZone:false, images:[], imageUrl:"", crexiUrl:"https://www.crexi.com/lease/properties/1048194", flyerUrl:"", notes:"1 space available." },
+  { id:49, address1:"2200 E Benson Highway", listingType:"For Lease", address2:"Tucson, AZ 85714", price:"Price Not Disclosed", type:"Industrial", sqft:"5,760", capRate:"", opportunityZone:false, images:[], imageUrl:"", crexiUrl:"https://www.crexi.com/lease/properties/1048194", flyerUrl:"", notes:"Single tenant." },
+  { id:50, address1:"149 W Sahuaro St", listingType:"For Lease", address2:"Tucson, AZ 85705", price:"$1.15/SF/MO", type:"Industrial", sqft:"5,100", capRate:"", opportunityZone:false, images:[], imageUrl:"", crexiUrl:"https://www.crexi.com/lease/properties/1048194", flyerUrl:"", notes:"1 space available." },
+  { id:51, address1:"340 N Commerce Park Loop", listingType:"For Lease", address2:"Tucson, AZ 85745", price:"Price Not Disclosed", type:"Office", sqft:"9,800", capRate:"", opportunityZone:false, images:[], imageUrl:"", crexiUrl:"https://www.crexi.com/lease/properties/1048194", flyerUrl:"", notes:"1 space available." },
+  { id:52, address1:"4915 E Speedway Blvd", listingType:"For Lease", address2:"Tucson, AZ 85712", price:"Price Not Disclosed", type:"Land", sqft:"69,260", capRate:"", opportunityZone:false, images:[], imageUrl:"", crexiUrl:"https://www.crexi.com/lease/properties/1048194", flyerUrl:"", notes:"Land. 1.59 acres." },
+  { id:53, address1:"2840 N Country Club Rd", listingType:"For Lease", address2:"Tucson, AZ 85716", price:"$18/SF/YR", type:"Office", sqft:"1,056", capRate:"", opportunityZone:false, images:[], imageUrl:"", crexiUrl:"https://www.crexi.com/lease/properties/1048194", flyerUrl:"", notes:"1 space available." },
+  { id:54, address1:"5050 & 5056 E Speedway Blvd", listingType:"For Lease", address2:"Tucson, AZ 85712", price:"Price Not Disclosed", type:"Land", sqft:"69,260", capRate:"", opportunityZone:false, images:[], imageUrl:"", crexiUrl:"https://www.crexi.com/lease/properties/1048194", flyerUrl:"", notes:"Single tenant. 30,056 SF." },
+  { id:55, address1:"1636 N 15th Ave", listingType:"For Lease", address2:"Tucson, AZ 85705", price:"Price Not Disclosed", type:"Land", sqft:"69,260", capRate:"", opportunityZone:false, images:[], imageUrl:"", crexiUrl:"https://www.crexi.com/lease/properties/1048194", flyerUrl:"", notes:"Land. 143,312 SF." },
+  { id:56, address1:"244 W Drachman St", listingType:"For Lease", address2:"Tucson, AZ 85705", price:"Price Not Disclosed", type:"Office", sqft:"4,065", capRate:"", opportunityZone:false, images:[], imageUrl:"", crexiUrl:"https://www.crexi.com/lease/properties/1048194", flyerUrl:"", notes:"1 space available." },
+  { id:57, address1:"3441 E Michigan St", listingType:"For Lease", address2:"Tucson, AZ 85714", price:"Price Not Disclosed", type:"Industrial", sqft:"5,000", capRate:"", opportunityZone:false, images:[], imageUrl:"", crexiUrl:"https://www.crexi.com/lease/properties/1048194", flyerUrl:"", notes:"1 space available." },
+  { id:58, address1:"56 W Congress Street", listingType:"For Lease", address2:"Tucson, AZ 85701", price:"$20.25/SF/YR", type:"Office", sqft:"2,500", capRate:"", opportunityZone:false, images:[], imageUrl:"", crexiUrl:"https://www.crexi.com/lease/properties/1048194", flyerUrl:"", notes:"1 space available." },
+  { id:59, address1:"4420 E Speedway", listingType:"For Lease", address2:"Tucson, AZ 85712", price:"$15/SF/YR", type:"Office", sqft:"1,306", capRate:"", opportunityZone:false, images:[], imageUrl:"", crexiUrl:"https://www.crexi.com/lease/properties/1048194", flyerUrl:"", notes:"1 space available." },
+  { id:60, address1:"Lisa Frank Warehouse", listingType:"For Lease", address2:"Tucson, AZ 85756", price:"Price Not Disclosed", type:"Industrial", sqft:"20,000", capRate:"", opportunityZone:false, images:[], imageUrl:"", crexiUrl:"https://www.crexi.com/lease/properties/1048194", flyerUrl:"", notes:"6760 S Lisa Frank Avenue. 1 space available." },
+  { id:61, address1:"Sherwood Professional Terrace", listingType:"For Lease", address2:"Tucson, AZ 85710", price:"Price Not Disclosed", type:"Office", sqft:"564", capRate:"", opportunityZone:false, images:[], imageUrl:"", crexiUrl:"https://www.crexi.com/lease/properties/1048194", flyerUrl:"", notes:"8230 E Broadway Blvd Suite W6." },
+  { id:62, address1:"The Marquez Professional Campus", listingType:"For Lease", address2:"Tucson, AZ 85719", price:"$1.83/SF/MO", type:"Office", sqft:"69,260", capRate:"", opportunityZone:false, images:[], imageUrl:"", crexiUrl:"https://www.crexi.com/lease/properties/1048194", flyerUrl:"", notes:"2713-2719 N Campbell Avenue. 4 spaces available." },
+
 ];
 
 let _activeTab = 'kam';
@@ -770,8 +1010,11 @@ function renderListings() {
   const countEl = document.getElementById('results-count');
 
   const filtered = LISTINGS.filter(p => {
-    if (_activeTab === 'all') return true;
     if (_activeTab === 'kam') return p.kamListing === true;
+    if (p.kamOnly) return false; // locked to Kam's Listings only
+    if (_activeTab === 'For Review') return p.forReview === true;
+    if (p.forReview) return false; // locked to For Review only
+    if (_activeTab === 'all') return true;
     return p.listingType === _activeTab;
   });
 
@@ -790,23 +1033,33 @@ function renderListings() {
 
     const imageHtml = imgs.length > 0
       ? `<div class="gallery-wrap" id="${gid}" data-imgs='${JSON.stringify(imgs)}' data-idx="0">
-           <img src="${imgs[0]}" alt="${p.address1}" loading="lazy" onclick="lbFromGallery(this)" />
+           <img src="${imgs[0]}" alt="${p.address1}" loading="lazy" style="cursor:zoom-in" onclick="lbFromGallery(this)" />
            ${imgs.length > 1 ? `
-           <button class="gallery-btn prev" onclick="galMove('${gid}',-1,event)">&#8249;</button>
-           <button class="gallery-btn next" onclick="galMove('${gid}',1,event)">&#8250;</button>
+           <button class="gallery-btn prev" onclick="galMove('${gid}',-1,event)" aria-label="Previous">&#8249;</button>
+           <button class="gallery-btn next" onclick="galMove('${gid}',1,event)" aria-label="Next">&#8250;</button>
            <div class="gallery-counter">1 / ${imgs.length}</div>` : ''}
          </div>`
-      : `<div class="card-img-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9l4-4 4 4 4-4 4 4"/><path d="M3 15l4 2 4-2 4 2 4-2"/></svg></div>`;
+      : `<div class="card-img-placeholder">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9l4-4 4 4 4-4 4 4"/>
+            <path d="M3 15l4 2 4-2 4 2 4-2"/>
+          </svg>
+         </div>`;
+
+    const crexiOverlay = '';
 
     const badge = p.opportunityZone
       ? `<div class="card-badge opp">Opportunity Zone</div>`
       : `<div class="card-badge">${p.type}</div>`;
 
-    const badgeClass = p.listingType === "For Lease" ? "badge-lease" : p.listingType === "For Sale or Lease" ? "badge-both" : "badge-sale";
+    const priceHtml = p.price === 'Unpriced'
+      ? `<div class="card-price unpriced">Price Upon Request</div>`
+      : `<span class="listing-type-badge ${p.listingType === "For Lease" ? "badge-lease" : p.listingType === "For Sale or Lease" ? "badge-both" : "badge-sale"}">${p.listingType || "For Sale"}</span>
+        <div class="card-price">${p.price}</div>`;
 
     const metrics = [];
     if (p.type)    metrics.push(`<div class="metric"><strong>${p.type}</strong></div>`);
-    if (p.sqft && p.sqft !== '1') metrics.push(`<div class="metric"><div class="metric-dot"></div><strong>${p.sqft}</strong> SqFt</div>`);
+    if (p.sqft)    metrics.push(`<div class="metric"><div class="metric-dot"></div><strong>${p.sqft}</strong> SqFt</div>`);
     if (p.capRate) metrics.push(`<div class="metric"><div class="metric-dot"></div><strong>${p.capRate}</strong> CAP</div>`);
 
     const flyerIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`;
@@ -814,9 +1067,16 @@ function renderListings() {
       ? `<a href="${p.flyerUrl}" target="_blank" rel="noopener" class="btn-flyer">${flyerIcon} View Flyer</a>`
       : `<span class="btn-flyer placeholder">${flyerIcon} Flyer Coming</span>`;
 
-    const crexiBtn = p.crexiUrl
-      ? `<a href="${p.crexiUrl}" target="_blank" rel="noopener" class="btn-crexi-card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> View on Crexi</a>`
+    const crexiCardBtn = p.crexiUrl
+      ? `<a href="${p.crexiUrl}" target="_blank" rel="noopener" class="btn-crexi-card">
+           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+             <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+           </svg>
+           View on Crexi
+         </a>`
       : '';
+
+    const actionsHtml = `<div class="card-actions">${flyerBtn}${crexiCardBtn}</div>`;
 
     return `
       <div class="card ${p.kamListing ? 'is-kam-listing' : ''}" style="animation-delay:${delay}s">
@@ -826,25 +1086,28 @@ function renderListings() {
             ${badge}
             ${p.kamListing ? '<div class="kam-badge">Kam\'s Listing</div>' : ''}
           </div>
+          ${crexiOverlay}
         </div>
         <div class="card-body">
-          <span class="listing-type-badge ${badgeClass}">${p.listingType || "For Sale"}</span>
-          <div class="card-price">${p.price}</div>
+          ${priceHtml}
           <div class="card-address-1">${p.address1}</div>
           <div class="card-address-2">${p.address2}</div>
           <div class="card-divider"></div>
           <div class="card-metrics">${metrics.join('')}</div>
-          <div class="card-actions">${flyerBtn}${crexiBtn}</div>
+          ${actionsHtml}
         </div>
         <div class="broker-strip">
-          <div class="broker-initials">KN</div>
+          <img class="broker-headshot" src="${CLIENT.agentPhotoUrl}" alt="${CLIENT.agentName}" style="object-position:center top;" />
           <div class="broker-details">
             <div class="broker-label">Broker in Charge</div>
             <div class="broker-name">${CLIENT.agentName}</div>
-            <div class="broker-meta">${CLIENT.agentPhone}</div>
+            <div class="broker-meta">${CLIENT.agentTitle} &nbsp;·&nbsp; ${CLIENT.agentPhone}</div>
           </div>
           <a class="broker-contact-btn" href="mailto:${CLIENT.agentEmail}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+              <polyline points="22,6 12,12 2,6"/>
+            </svg>
             Contact
           </a>
         </div>
@@ -1291,7 +1554,27 @@ function showToast(msg, isError = false) {
   }
 })();
 
-renderListings();
+// Pre-filter images: remove broken URLs before rendering
+(async function() {
+  function testImg(url) {
+    return new Promise(function(res) {
+      var i = new Image();
+      i.onload = function() { res(true); };
+      i.onerror = function() { res(false); };
+      i.src = url;
+    });
+  }
+  for (var i = 0; i < LISTINGS.length; i++) {
+    var p = LISTINGS[i];
+    if (p.images && p.images.length > 0) {
+      var ok = await Promise.all(p.images.map(testImg));
+      p.images = p.images.filter(function(_, j) { return ok[j]; });
+      if (p.images.length > 0) p.imageUrl = p.images[0];
+      else p.imageUrl = '';
+    }
+  }
+  renderListings();
+})();
 </script>
 </body>
 </html>
