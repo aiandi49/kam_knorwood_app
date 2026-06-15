@@ -240,7 +240,7 @@
     .badge-sale { background: #e8f4ec; color: #2a7a45; }
     .badge-lease { background: #e8eef8; color: #2a4a8a; }
     .badge-both { background: #f5f0e8; color: #8a5a1a; }
-    .is-kam-listing .listing-type-badge { align-self: center; }
+    .listing-type-badge { align-self: center; }
 
     .card-price {
       font-family: 'Cormorant Garamond', serif;
@@ -1096,12 +1096,12 @@ function renderListings() {
 
           ${crexiOverlay}
         </div>
-        <div class="card-body" ${p.kamListing ? 'style="text-align:center;align-items:center;"' : ''}>
+        <div class="card-body" style="text-align:center;align-items:center;">
           ${priceHtml}
           <div class="card-address-1">${p.address1}</div>
           <div class="card-address-2">${p.address2}</div>
           <div class="card-divider"></div>
-          <div class="card-metrics" ${p.kamListing ? 'style="justify-content:center;"' : ''}>${metrics.join('')}</div>
+          <div class="card-metrics" style="justify-content:center;">${metrics.join('')}</div>
           ${actionsHtml}
         </div>
         <div class="broker-strip">
