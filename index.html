@@ -425,6 +425,16 @@
     }
     .broker-contact-btn:hover { background: var(--gold); transform: translateY(-1px); }
     .broker-contact-btn svg { width: 9px; height: 9px; }
+    .broker-phone-img {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      object-fit: cover;
+      object-position: center top;
+      flex-shrink: 0;
+      box-shadow: 0 2px 6px rgba(28,26,23,0.12);
+      transition: transform 0.2s;
+    }
+    .broker-phone-img:hover { transform: scale(1.07); }
 
     /* NO RESULTS */
     .no-results {
@@ -1101,14 +1111,11 @@ function renderListings() {
           <div class="broker-details">
             <div class="broker-label">Broker in Charge</div>
             <div class="broker-name">${CLIENT.agentName}</div>
-            <div class="broker-meta">${CLIENT.agentTitle} &nbsp;·&nbsp; ${CLIENT.agentPhone}</div>
+            <div class="broker-meta">${CLIENT.agentTitle}</div>
           </div>
-          <a class="broker-contact-btn" href="mailto:${CLIENT.agentEmail}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-              <polyline points="22,6 12,12 2,6"/>
-            </svg>
-            Contact
+          <a href="tel:${CLIENT.agentPhone}" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:3px;margin-left:auto;text-decoration:none;">
+            <img src="https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/kam_cellphone.png" alt="Call ${CLIENT.agentName}" class="broker-phone-img" />
+            <span style="font-size:0.48rem;color:var(--ink-mute);white-space:nowrap;letter-spacing:0.02em;text-align:center;">${CLIENT.agentPhone}</span>
           </a>
         </div>
       </div>`;
