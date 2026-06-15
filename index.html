@@ -1120,10 +1120,29 @@ async function saveClient() {
       if (spErr) console.warn('Search params save warning:', spErr.message);
     }
 
-    // 3. Also insert email consent record
-    await sb.from('email_consent').insert({ client_id: clientRow.id, consented: false });
+    // 3. Insert email consent record and get the token back
+    const { data: consentRow, error: conErr } = await sb
+      .from('email_consent')
+      .insert({ client_id: clientRow.id, consented: false })
+      .select()
+      .single();
+    if (conErr) console.warn('Consent row warning:', conErr.message);
 
-    showToast(`✓ ${name} saved to Supabase!`);
+    // 4. Fire welcome / opt-in email (non-blocking)
+    if (consentRow?.consent_token) {
+      fetch('/api/welcome-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientId:     clientRow.id,
+          clientName:   name,
+          clientEmail:  email,
+          consentToken: consentRow.consent_token
+        })
+      }).catch(e => console.warn('Welcome email failed:', e));
+    }
+
+    showToast(`✓ ${name} saved! Welcome email sent.`);
     clearAddForm();
     switchDrawerTab('list');
     await loadClients();
