@@ -27,6 +27,9 @@ export default async function handler(req, res) {
           price_min, price_max,
           size_min, size_max,
           cap_rate_min, opportunity_zone
+        ),
+        email_consent (
+          consented
         )
       `)
       .eq('status', 'active');
@@ -46,6 +49,13 @@ export default async function handler(req, res) {
     // 3. For each client, find matching properties and send email
     for (const client of clients) {
       const params = client.client_search_params?.[0];
+      // Skip clients who haven't confirmed opt-in
+      const consented = client.email_consent?.[0]?.consented;
+      if (!consented) {
+        skipped++;
+        continue;
+      }
+
       const matches = matchProperties(properties, params);
 
       if (matches.length === 0) {
