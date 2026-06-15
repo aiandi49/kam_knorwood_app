@@ -1,0 +1,16 @@
+{
+  "crons": [
+    {
+      "path": "/api/daily-digest",
+      "schedule": "0 12 * * *"
+    }
+  ],
+  "functions": {
+    "api/daily-digest.js": {
+      "maxDuration": 60
+    },
+    "api/send-email.js": {
+      "maxDuration": 30
+    }
+  }
+}
