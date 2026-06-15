@@ -1095,12 +1095,12 @@ function renderListings() {
 
           ${crexiOverlay}
         </div>
-        <div class="card-body">
+        <div class="card-body" ${p.kamListing ? 'style="text-align:center;align-items:center;"' : ''}>
           ${priceHtml}
           <div class="card-address-1">${p.address1}</div>
           <div class="card-address-2">${p.address2}</div>
           <div class="card-divider"></div>
-          <div class="card-metrics">${metrics.join('')}</div>
+          <div class="card-metrics" ${p.kamListing ? 'style="justify-content:center;"' : ''}>${metrics.join('')}</div>
           ${actionsHtml}
         </div>
         <div class="broker-strip">
