@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Kam Norwood — Property Portal</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
   <style>
     :root {
@@ -760,7 +761,7 @@
       <button class="drawer-tab active" id="dtab-list" onclick="switchDrawerTab('list')">All Clients</button>
       <button class="drawer-tab" id="dtab-add" onclick="switchDrawerTab('add')">+ Add Client</button>
       <button class="drawer-tab" id="dtab-email" onclick="switchDrawerTab('email')">⚡ Blast Property</button>
-      <a href="/upload-properties.html" class="drawer-tab" style="text-decoration:none;" target="_blank">📂 Import Properties</a>
+      <button class="drawer-tab" id="dtab-import" onclick="switchDrawerTab('import')">📂 Import Properties</button>
     </div>
 
     <div class="drawer-body">
@@ -926,6 +927,59 @@
         </button>
 
         <div id="blast-result" style="display:none;margin-top:14px;padding:12px 14px;border-radius:8px;font-size:0.83rem;"></div>
+      </div>
+
+      <!-- TAB: IMPORT PROPERTIES -->
+      <div id="dpanel-import" style="display:none">
+
+        <div style="background:linear-gradient(135deg,#1C1A17 0%,#4A4640 100%);border-radius:10px;padding:16px 18px;margin-bottom:18px;">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:600;color:#fff;margin-bottom:4px;">📂 Import Properties</div>
+          <div style="font-size:0.78rem;color:rgba(255,255,255,0.6);line-height:1.4;">Upload a Crexi export to update the property database instantly.</div>
+        </div>
+
+        <div style="background:var(--warm);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:16px;font-size:0.82rem;color:var(--ink-mid);line-height:1.6;">
+          <strong style="color:var(--ink);">How to export from Crexi:</strong><br>
+          1. Log into Crexi → run your property search<br>
+          2. Click <strong>Export</strong> (top right) → download the XLSX<br>
+          3. Drop it below — done
+        </div>
+
+        <!-- Drop zone -->
+        <div id="drawer-drop-zone" style="border:2px dashed var(--border-md);border-radius:10px;background:var(--white);padding:36px 20px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:16px;"
+          onclick="document.getElementById('drawer-file-input').click()"
+          ondragover="event.preventDefault();this.style.borderColor='var(--gold)';this.style.background='#fdf9f0';"
+          ondragleave="this.style.borderColor='';this.style.background='';"
+          ondrop="event.preventDefault();this.style.borderColor='';this.style.background='';handleDrawerFile(event.dataTransfer.files[0])">
+          <div style="font-size:2rem;margin-bottom:10px;">📂</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:600;margin-bottom:6px;">Drop your Crexi export here</div>
+          <div style="font-size:0.8rem;color:var(--ink-mute);">or <span style="color:var(--gold);font-weight:500;">click to browse</span> · XLSX or CSV</div>
+        </div>
+        <input type="file" id="drawer-file-input" accept=".xlsx,.csv" style="display:none" onchange="handleDrawerFile(this.files[0])">
+
+        <!-- Preview -->
+        <div id="drawer-import-preview" style="display:none;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <div style="font-size:0.85rem;font-weight:500;color:var(--ink);"><span id="drawer-import-count">0</span> properties ready to import</div>
+          </div>
+          <div style="max-height:200px;overflow-y:auto;border:1px solid var(--border-md);border-radius:8px;font-size:0.78rem;margin-bottom:14px;">
+            <table style="width:100%;border-collapse:collapse;">
+              <thead style="background:var(--ink);color:#fff;position:sticky;top:0;">
+                <tr>
+                  <th style="padding:7px 10px;text-align:left;font-weight:500;">Address</th>
+                  <th style="padding:7px 10px;text-align:left;font-weight:500;">Type</th>
+                  <th style="padding:7px 10px;text-align:left;font-weight:500;">Price</th>
+                </tr>
+              </thead>
+              <tbody id="drawer-import-tbody"></tbody>
+            </table>
+          </div>
+          <button class="btn-add-client" id="drawer-import-btn" onclick="drawerImportToSupabase()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Import to Database
+          </button>
+        </div>
+
+        <div id="drawer-import-result" style="display:none;margin-top:14px;padding:12px 14px;border-radius:8px;font-size:0.83rem;"></div>
       </div>
 
     </div><!-- /drawer-body -->
@@ -1263,9 +1317,11 @@ function closeClientDrawer() {
 //  DRAWER TAB SWITCH
 // ═══════════════════════════════════════════════════════════════
 function switchDrawerTab(tab) {
-  ['list','add','email'].forEach(t => {
-    document.getElementById(`dtab-${t}`).classList.toggle('active', t === tab);
-    document.getElementById(`dpanel-${t}`).style.display = t === tab ? '' : 'none';
+  ['list','add','email','import'].forEach(t => {
+    const dtab = document.getElementById(`dtab-${t}`);
+    const dpanel = document.getElementById(`dpanel-${t}`);
+    if (dtab) dtab.classList.toggle('active', t === tab);
+    if (dpanel) dpanel.style.display = t === tab ? '' : 'none';
   });
   if (tab === 'email') loadBlastData();
 }
@@ -1657,6 +1713,98 @@ function quickEmailClient(id, email, name) {
   switchDrawerTab('email');
 }
 
+
+// ═══════════════════════════════════════════════════════════════
+//  DRAWER IMPORT
+// ═══════════════════════════════════════════════════════════════
+let _drawerImportRows = [];
+
+function handleDrawerFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const data = new Uint8Array(e.target.result);
+    const wb = XLSX.read(data, { type: 'array' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+    let headerIdx = raw.findIndex(row => row.some(cell => String(cell).trim() === 'Address'));
+    if (headerIdx === -1) { showToast('Could not find header row. Use a Crexi export file.', true); return; }
+
+    const headers = raw[headerIdx].map(h => String(h).trim());
+    const dataRows = raw.slice(headerIdx + 1).filter(r => r.some(c => c !== ''));
+
+    _drawerImportRows = dataRows.map(row => {
+      const get = col => { const i = headers.indexOf(col); return i >= 0 ? String(row[i] || '').trim() : ''; };
+      const address = get('Address');
+      const city = get('City'); const state = get('State'); const zip = get('Zip');
+      const link = get('Property Link');
+      const price = parseDrawerNum(get('Asking Price'));
+      const sqft = parseDrawerNum(get('SqFt'));
+      const cap = parseFloat(get('Cap Rate')) || null;
+      const oz = get('Opportunity Zone').toLowerCase() === 'yes';
+      const dom = get('Days on Market');
+      const propName = get('Property Name');
+      let listingType = link.includes('/lease/') ? 'For Lease' : 'For Sale';
+      return {
+        address1: address,
+        address2: [city, state, zip].filter(Boolean).join(', '),
+        property_type: get('Type') || 'Commercial',
+        listing_type: listingType,
+        price, sqft, cap_rate: cap,
+        opportunity_zone: oz,
+        kam_listing: false, status: 'active',
+        crexi_url: link || null,
+        notes: [dom ? `On-market ${dom} days.` : '', propName && propName !== address ? propName : ''].filter(Boolean).join(' ') || null
+      };
+    }).filter(r => r.address1);
+
+    document.getElementById('drawer-import-count').textContent = _drawerImportRows.length;
+    document.getElementById('drawer-import-tbody').innerHTML = _drawerImportRows.map(r =>
+      `<tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:6px 10px;color:var(--ink);font-weight:500;">${r.address1}</td>
+        <td style="padding:6px 10px;color:var(--ink-mute);">${r.listing_type}</td>
+        <td style="padding:6px 10px;color:var(--ink-mute);">${r.price ? '$'+r.price.toLocaleString() : '—'}</td>
+      </tr>`
+    ).join('');
+    document.getElementById('drawer-import-preview').style.display = 'block';
+    document.getElementById('drawer-import-result').style.display = 'none';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function parseDrawerNum(val) {
+  if (!val || val === '' || val === '0') return null;
+  const s = String(val).replace(/[$,\s]/g, '');
+  const n = parseFloat(s);
+  return isNaN(n) || n === 0 ? null : Math.round(n);
+}
+
+async function drawerImportToSupabase() {
+  if (_drawerImportRows.length === 0) return;
+  const btn = document.getElementById('drawer-import-btn');
+  btn.textContent = 'Importing…';
+  btn.disabled = true;
+
+  const { error } = await sb.from('properties').upsert(_drawerImportRows, {
+    onConflict: 'address1,address2', ignoreDuplicates: false
+  });
+
+  const result = document.getElementById('drawer-import-result');
+  result.style.display = 'block';
+  if (!error) {
+    result.style.background = '#e8f5ee'; result.style.border = '1px solid #a8d5bc'; result.style.color = '#2d7a4f';
+    result.innerHTML = `✅ <strong>${_drawerImportRows.length} properties imported!</strong> Database updated — next 5am email includes all new listings.`;
+    document.getElementById('drawer-import-preview').style.display = 'none';
+    document.getElementById('drawer-file-input').value = '';
+    _drawerImportRows = [];
+  } else {
+    result.style.background = '#fdecea'; result.style.border = '1px solid #f5c6c2'; result.style.color = '#c0392b';
+    result.innerHTML = `❌ <strong>Import failed:</strong> ${error.message}`;
+  }
+  btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Import to Database';
+  btn.disabled = false;
+}
 
 // ═══════════════════════════════════════════════════════════════
 //  TOAST
