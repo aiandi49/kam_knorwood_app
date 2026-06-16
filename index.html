@@ -723,12 +723,26 @@
       <div class="agent-title">Commercial Real Estate Broker &nbsp;·&nbsp; (520) 360-8510</div>
       <div class="agent-title" style="margin-top:2px;letter-spacing:0.06em;">License #: SA633223000</div>
     </div>
-    <button class="btn-clients" onclick="openClientDrawer()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      Clients
-      <span class="client-count-badge" id="client-count-badge" style="display:none">0</span>
+    <button class="btn-clients" onclick="openAdminGate()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Admin
     </button>
   </header>
+
+  <!-- ADMIN GATE MODAL -->
+  <div id="admin-gate-overlay" style="display:none;position:fixed;inset:0;background:rgba(28,26,23,0.5);z-index:900;backdrop-filter:blur(4px);" onclick="closeAdminGate()"></div>
+  <div id="admin-gate-modal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:901;background:var(--white);border-radius:14px;padding:40px;width:380px;max-width:90vw;box-shadow:0 20px 60px rgba(28,26,23,0.2);">
+    <div style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:600;margin-bottom:6px;">Admin Access</div>
+    <div style="color:var(--ink-mute);font-size:0.85rem;margin-bottom:24px;">Enter your password to access admin tools.</div>
+    <div style="margin-bottom:16px;">
+      <label style="display:block;font-size:0.75rem;font-weight:500;letter-spacing:0.07em;text-transform:uppercase;color:var(--ink-mid);margin-bottom:6px;">Password</label>
+      <input type="password" id="admin-pw-input" placeholder="Enter password"
+        style="width:100%;padding:10px 14px;border:1px solid var(--border-md);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.9rem;background:var(--cream);color:var(--ink);outline:none;"
+        onkeydown="if(event.key==='Enter')checkAdminPassword()" />
+    </div>
+    <div id="admin-pw-error" style="color:#c0392b;font-size:0.82rem;margin-bottom:12px;display:none;">Incorrect password. Try again.</div>
+    <button onclick="checkAdminPassword()" style="width:100%;padding:12px;border-radius:100px;background:var(--gold);color:var(--white);border:none;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:500;cursor:pointer;">Unlock</button>
+  </div>
 
   <!-- CLIENT OVERLAY + DRAWER -->
   <div class="client-overlay" id="client-overlay" onclick="closeClientDrawer()"></div>
@@ -745,6 +759,7 @@
       <button class="drawer-tab active" id="dtab-list" onclick="switchDrawerTab('list')">All Clients</button>
       <button class="drawer-tab" id="dtab-add" onclick="switchDrawerTab('add')">+ Add Client</button>
       <button class="drawer-tab" id="dtab-email" onclick="switchDrawerTab('email')">✉ Send Email</button>
+      <a href="/upload-properties.html" class="drawer-tab" style="text-decoration:none;" target="_blank">📂 Import Properties</a>
     </div>
 
     <div class="drawer-body">
@@ -1184,6 +1199,39 @@ let _drawerOpen = false;
 // ═══════════════════════════════════════════════════════════════
 //  DRAWER OPEN / CLOSE
 // ═══════════════════════════════════════════════════════════════
+const ADMIN_PASSWORD = "knorwood2026";
+let _adminUnlocked = false;
+
+function openAdminGate() {
+  if (_adminUnlocked) {
+    openClientDrawer();
+    return;
+  }
+  document.getElementById('admin-gate-overlay').style.display = 'block';
+  document.getElementById('admin-gate-modal').style.display = 'block';
+  setTimeout(() => document.getElementById('admin-pw-input').focus(), 100);
+}
+
+function closeAdminGate() {
+  document.getElementById('admin-gate-overlay').style.display = 'none';
+  document.getElementById('admin-gate-modal').style.display = 'none';
+  document.getElementById('admin-pw-input').value = '';
+  document.getElementById('admin-pw-error').style.display = 'none';
+}
+
+function checkAdminPassword() {
+  const val = document.getElementById('admin-pw-input').value;
+  if (val === ADMIN_PASSWORD) {
+    _adminUnlocked = true;
+    closeAdminGate();
+    openClientDrawer();
+  } else {
+    document.getElementById('admin-pw-error').style.display = 'block';
+    document.getElementById('admin-pw-input').value = '';
+    document.getElementById('admin-pw-input').focus();
+  }
+}
+
 function openClientDrawer() {
   document.getElementById('client-drawer').classList.add('open');
   document.getElementById('client-overlay').classList.add('open');
