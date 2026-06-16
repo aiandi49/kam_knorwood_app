@@ -231,20 +231,8 @@
     <a href="https://kam-knorwood-app.vercel.app" class="back-link">← Back to Portal</a>
   </header>
 
-  <!-- PASSWORD GATE -->
-  <div id="gate" class="gate">
-    <h2>Admin Access</h2>
-    <p>This tool updates the live property database. Enter the import password to continue.</p>
-    <div class="field">
-      <label>Password</label>
-      <input type="password" id="pwInput" placeholder="Enter password" />
-    </div>
-    <button class="btn btn-gold" onclick="checkPassword()">Unlock Tool</button>
-    <div class="error-msg" id="pwError"></div>
-  </div>
-
   <!-- MAIN TOOL -->
-  <div class="tool" id="tool">
+  <div class="tool visible" id="tool">
     <h1>Import Properties</h1>
     <p class="subtitle">Upload a Crexi export (XLSX or CSV) to add new listings to the database. Existing properties are updated, new ones are added.</p>
 
@@ -303,25 +291,8 @@
   // ── CONFIG ──────────────────────────────────────────────────
   const SUPABASE_URL = "https://mlgmigguhljsiopctkkj.supabase.co";
   const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1sZ21pZ2d1aGxqc2lvcGN0a2tqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDEwMzc3NywiZXhwIjoyMDg5Njc5Nzc3fQ.Uazw0riDv9OvAmHVY_8zT1r-hG3HD2Rq2c0_VQ3gMVw";
-  const IMPORT_PASSWORD = "knorwood2026";
-
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   let parsedRows = [];
-
-  // ── PASSWORD ─────────────────────────────────────────────────
-  document.getElementById('pwInput').addEventListener('keydown', e => {
-    if (e.key === 'Enter') checkPassword();
-  });
-
-  function checkPassword() {
-    const val = document.getElementById('pwInput').value;
-    if (val === IMPORT_PASSWORD) {
-      document.getElementById('gate').style.display = 'none';
-      document.getElementById('tool').classList.add('visible');
-    } else {
-      document.getElementById('pwError').textContent = 'Incorrect password. Try again.';
-    }
-  }
 
   // ── DRAG & DROP ──────────────────────────────────────────────
   const dropZone = document.getElementById('dropZone');
