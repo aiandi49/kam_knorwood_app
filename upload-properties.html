@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Property Import — Kam Norwood CRE</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --cream:    #F7F4EE;
+      --warm:     #EDE8DF;
+      --stone:    #C9BFA8;
+      --ink:      #1C1A17;
+      --ink-mid:  #4A4640;
+      --ink-mute: #8A837A;
+      --gold:     #B8963E;
+      --gold-lt:  #D4AC58;
+      --white:    #FFFFFF;
+      --border:   rgba(100,90,76,0.15);
+      --border-md:rgba(100,90,76,0.25);
+      --shadow-sm:0 2px 8px rgba(28,26,23,0.06);
+      --shadow-md:0 8px 32px rgba(28,26,23,0.10);
+      --r:        10px;
+      --green:    #2d7a4f;
+      --green-lt: #e8f5ee;
+      --red:      #c0392b;
+      --red-lt:   #fdecea;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--cream);
+      color: var(--ink);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 400;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(184,150,62,0.06) 0%, transparent 70%),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+    .page { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 0 24px 80px; }
+
+    header {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 20px;
+      padding: 40px 0 36px;
+      border-bottom: 1px solid var(--border-md);
+      margin-bottom: 40px;
+    }
+    .agent-photo img {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      border: 3px solid var(--white);
+      box-shadow: var(--shadow-md);
+      object-fit: cover;
+      object-position: center top;
+    }
+    .agent-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4rem; font-weight: 600; color: var(--ink);
+      line-height: 1.1; letter-spacing: 0.01em;
+    }
+    .agent-title { font-size: 0.75rem; color: var(--ink-mute); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 3px; }
+    .back-link {
+      font-size: 0.8rem; color: var(--gold); text-decoration: none;
+      letter-spacing: 0.05em; text-transform: uppercase; font-weight: 500;
+      border: 1px solid var(--gold-lt); border-radius: 100px;
+      padding: 8px 16px; transition: all 0.18s;
+    }
+    .back-link:hover { background: var(--gold); color: var(--white); }
+
+    h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem; font-weight: 600; color: var(--ink);
+      margin-bottom: 8px;
+    }
+    .subtitle { color: var(--ink-mute); font-size: 0.9rem; margin-bottom: 36px; }
+
+    /* PASSWORD GATE */
+    .gate {
+      background: var(--white);
+      border: 1px solid var(--border-md);
+      border-radius: var(--r);
+      padding: 40px;
+      max-width: 420px;
+      box-shadow: var(--shadow-md);
+    }
+    .gate h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4rem; margin-bottom: 8px;
+    }
+    .gate p { color: var(--ink-mute); font-size: 0.85rem; margin-bottom: 24px; }
+    .field label { display: block; font-size: 0.78rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-mid); margin-bottom: 6px; }
+    .field input {
+      width: 100%; padding: 10px 14px;
+      border: 1px solid var(--border-md); border-radius: 8px;
+      font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
+      background: var(--cream); color: var(--ink);
+      outline: none; transition: border-color 0.18s;
+    }
+    .field input:focus { border-color: var(--gold); }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 11px 24px; border-radius: 100px;
+      font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 500;
+      cursor: pointer; transition: all 0.18s; border: none;
+    }
+    .btn-gold { background: var(--gold); color: var(--white); margin-top: 16px; }
+    .btn-gold:hover { background: var(--ink); }
+    .btn-gold:disabled { opacity: 0.5; cursor: not-allowed; }
+    .error-msg { color: var(--red); font-size: 0.82rem; margin-top: 10px; }
+
+    /* MAIN TOOL */
+    .tool { display: none; }
+    .tool.visible { display: block; }
+
+    /* DROP ZONE */
+    .drop-zone {
+      border: 2px dashed var(--border-md);
+      border-radius: var(--r);
+      background: var(--white);
+      padding: 60px 40px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 32px;
+    }
+    .drop-zone:hover, .drop-zone.drag-over {
+      border-color: var(--gold);
+      background: #fdf9f0;
+    }
+    .drop-icon { font-size: 2.5rem; margin-bottom: 16px; }
+    .drop-title { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; font-weight: 600; margin-bottom: 8px; }
+    .drop-sub { color: var(--ink-mute); font-size: 0.85rem; }
+    .drop-sub span { color: var(--gold); font-weight: 500; }
+    #fileInput { display: none; }
+
+    /* PREVIEW TABLE */
+    .preview-section { display: none; }
+    .preview-section.visible { display: block; }
+    .preview-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .preview-header h2 { font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 600; }
+    .count-badge {
+      background: var(--ink); color: var(--white);
+      font-size: 0.75rem; font-weight: 500; padding: 4px 12px;
+      border-radius: 100px; letter-spacing: 0.05em;
+    }
+    .table-wrap { overflow-x: auto; border-radius: var(--r); border: 1px solid var(--border-md); margin-bottom: 24px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    thead { background: var(--ink); color: var(--white); }
+    thead th { padding: 10px 14px; text-align: left; font-weight: 500; letter-spacing: 0.04em; white-space: nowrap; }
+    tbody tr { border-bottom: 1px solid var(--border); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:nth-child(even) { background: var(--warm); }
+    tbody td { padding: 9px 14px; color: var(--ink-mid); white-space: nowrap; }
+    tbody td:first-child { color: var(--ink); font-weight: 500; }
+    .tag {
+      display: inline-block; font-size: 0.7rem; font-weight: 500;
+      padding: 2px 8px; border-radius: 100px; letter-spacing: 0.04em;
+    }
+    .tag-sale { background: #e8f0fe; color: #1a56db; }
+    .tag-lease { background: #e8f5ee; color: #2d7a4f; }
+    .tag-both { background: #fff3e0; color: #b45309; }
+
+    /* ACTIONS */
+    .actions { display: flex; gap: 12px; align-items: center; margin-bottom: 32px; flex-wrap: wrap; }
+    .btn-outline {
+      background: var(--white); color: var(--ink-mid);
+      border: 1px solid var(--border-md); padding: 10px 20px;
+      border-radius: 100px; font-family: 'DM Sans', sans-serif;
+      font-size: 0.83rem; font-weight: 500; cursor: pointer;
+      transition: all 0.18s;
+    }
+    .btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* RESULT */
+    .result-box {
+      border-radius: var(--r); padding: 20px 24px;
+      font-size: 0.88rem; display: none; margin-bottom: 24px;
+    }
+    .result-box.success { background: var(--green-lt); border: 1px solid #a8d5bc; color: var(--green); display: block; }
+    .result-box.error { background: var(--red-lt); border: 1px solid #f5c6c2; color: var(--red); display: block; }
+    .result-box strong { font-weight: 600; }
+
+    /* LOADING */
+    .spinner {
+      display: inline-block; width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: white; border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* INSTRUCTIONS */
+    .instructions {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 24px 28px; margin-bottom: 32px;
+    }
+    .instructions h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; margin-bottom: 12px; }
+    .instructions ol { padding-left: 20px; color: var(--ink-mid); font-size: 0.85rem; }
+    .instructions li { margin-bottom: 6px; }
+    .instructions li strong { color: var(--ink); }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="agent-photo">
+      <img src="https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/kam_profile_2.png" alt="Kam Norwood" />
+    </div>
+    <div>
+      <div class="agent-name">Kam Norwood</div>
+      <div class="agent-title">Commercial Real Estate · Property Import Tool</div>
+    </div>
+    <a href="https://kam-knorwood-app.vercel.app" class="back-link">← Back to Portal</a>
+  </header>
+
+  <!-- PASSWORD GATE -->
+  <div id="gate" class="gate">
+    <h2>Admin Access</h2>
+    <p>This tool updates the live property database. Enter the import password to continue.</p>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="pwInput" placeholder="Enter password" />
+    </div>
+    <button class="btn btn-gold" onclick="checkPassword()">Unlock Tool</button>
+    <div class="error-msg" id="pwError"></div>
+  </div>
+
+  <!-- MAIN TOOL -->
+  <div class="tool" id="tool">
+    <h1>Import Properties</h1>
+    <p class="subtitle">Upload a Crexi export (XLSX or CSV) to add new listings to the database. Existing properties are updated, new ones are added.</p>
+
+    <div class="instructions">
+      <h3>How to export from Crexi</h3>
+      <ol>
+        <li>Log into <strong>Crexi.com</strong> and run your property search</li>
+        <li>Click <strong>Export</strong> (top right of results) → download the XLSX file</li>
+        <li>Drag and drop the file below — the tool handles the rest</li>
+      </ol>
+    </div>
+
+    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+      <div class="drop-icon">📂</div>
+      <div class="drop-title">Drop your Crexi export here</div>
+      <div class="drop-sub">or <span>click to browse</span> · Accepts .xlsx or .csv</div>
+    </div>
+    <input type="file" id="fileInput" accept=".xlsx,.csv" />
+
+    <div class="result-box" id="resultBox"></div>
+
+    <div class="preview-section" id="previewSection">
+      <div class="preview-header">
+        <h2>Preview — <span id="previewCount">0</span> properties parsed</h2>
+        <span class="count-badge" id="newBadge"></span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Address</th>
+              <th>City / State</th>
+              <th>Type</th>
+              <th>Listing</th>
+              <th>Price</th>
+              <th>SqFt</th>
+              <th>CAP</th>
+              <th>OZ</th>
+            </tr>
+          </thead>
+          <tbody id="previewBody"></tbody>
+        </table>
+      </div>
+      <div class="actions">
+        <button class="btn btn-gold" id="importBtn" onclick="importToSupabase()">
+          Import to Database
+        </button>
+        <button class="btn-outline" onclick="resetTool()">Upload Different File</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ── CONFIG ──────────────────────────────────────────────────
+  const SUPABASE_URL = "https://mlgmigguhljsiopctkkj.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1sZ21pZ2d1aGxqc2lvcGN0a2tqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDEwMzc3NywiZXhwIjoyMDg5Njc5Nzc3fQ.Uazw0riDv9OvAmHVY_8zT1r-hG3HD2Rq2c0_VQ3gMVw";
+  const IMPORT_PASSWORD = "knorwood2026";
+
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  let parsedRows = [];
+
+  // ── PASSWORD ─────────────────────────────────────────────────
+  document.getElementById('pwInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') checkPassword();
+  });
+
+  function checkPassword() {
+    const val = document.getElementById('pwInput').value;
+    if (val === IMPORT_PASSWORD) {
+      document.getElementById('gate').style.display = 'none';
+      document.getElementById('tool').classList.add('visible');
+    } else {
+      document.getElementById('pwError').textContent = 'Incorrect password. Try again.';
+    }
+  }
+
+  // ── DRAG & DROP ──────────────────────────────────────────────
+  const dropZone = document.getElementById('dropZone');
+  const fileInput = document.getElementById('fileInput');
+
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  });
+  fileInput.addEventListener('change', e => {
+    if (e.target.files[0]) handleFile(e.target.files[0]);
+  });
+
+  // ── FILE PARSING ─────────────────────────────────────────────
+  function handleFile(file) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+      // Find header row (contains "Address")
+      let headerIdx = raw.findIndex(row =>
+        row.some(cell => String(cell).trim() === 'Address')
+      );
+      if (headerIdx === -1) {
+        showResult('error', 'Could not find the header row. Make sure this is a Crexi export file.');
+        return;
+      }
+
+      const headers = raw[headerIdx].map(h => String(h).trim());
+      const dataRows = raw.slice(headerIdx + 1).filter(r => r.some(c => c !== ''));
+
+      parsedRows = dataRows.map(row => {
+        const get = (col) => {
+          const i = headers.indexOf(col);
+          return i >= 0 ? String(row[i] || '').trim() : '';
+        };
+
+        const address = get('Address');
+        const city    = get('City');
+        const state   = get('State');
+        const zip     = get('Zip');
+        const type    = get('Type');
+        const sqft    = parseNum(get('SqFt'));
+        const cap     = parseFloat(get('Cap Rate')) || null;
+        const priceRaw = get('Asking Price');
+        const price   = parseNum(priceRaw);
+        const oz      = get('Opportunity Zone').toLowerCase() === 'yes';
+        const link    = get('Property Link');
+        const dom     = get('Days on Market');
+        const propName = get('Property Name');
+
+        // Determine listing type from URL
+        let listingType = 'For Sale';
+        if (link.includes('/lease/')) listingType = 'For Lease';
+
+        const notes = [
+          dom ? `On-market ${dom} days.` : '',
+          propName && propName !== address ? propName : ''
+        ].filter(Boolean).join(' ');
+
+        return {
+          address1: address,
+          address2: [city, state, zip].filter(Boolean).join(', '),
+          property_type: type || 'Commercial',
+          listing_type: listingType,
+          price: price,
+          sqft: sqft,
+          cap_rate: cap,
+          opportunity_zone: oz,
+          kam_listing: false,
+          status: 'active',
+          crexi_url: link || null,
+          notes: notes || null
+        };
+      }).filter(r => r.address1);
+
+      renderPreview(parsedRows);
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function parseNum(val) {
+    if (!val || val === '' || val === '0') return null;
+    const s = String(val).replace(/[$,\s]/g, '');
+    const n = parseFloat(s);
+    return isNaN(n) || n === 0 ? null : Math.round(n);
+  }
+
+  // ── PREVIEW ──────────────────────────────────────────────────
+  function renderPreview(rows) {
+    document.getElementById('previewCount').textContent = rows.length;
+    document.getElementById('newBadge').textContent = `${rows.length} ready to import`;
+
+    const tbody = document.getElementById('previewBody');
+    tbody.innerHTML = rows.map(r => {
+      const tagClass = r.listing_type === 'For Sale' ? 'tag-sale' : r.listing_type === 'For Lease' ? 'tag-lease' : 'tag-both';
+      const price = r.price ? '$' + r.price.toLocaleString() : '—';
+      const sqft  = r.sqft  ? r.sqft.toLocaleString() : '—';
+      const cap   = r.cap_rate ? r.cap_rate + '%' : '—';
+      const oz    = r.opportunity_zone ? '★' : '';
+      return `<tr>
+        <td>${r.address1}</td>
+        <td>${r.address2}</td>
+        <td>${r.property_type}</td>
+        <td><span class="tag ${tagClass}">${r.listing_type}</span></td>
+        <td>${price}</td>
+        <td>${sqft}</td>
+        <td>${cap}</td>
+        <td>${oz}</td>
+      </tr>`;
+    }).join('');
+
+    document.getElementById('previewSection').classList.add('visible');
+    document.getElementById('previewSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // ── IMPORT ───────────────────────────────────────────────────
+  async function importToSupabase() {
+    const btn = document.getElementById('importBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Importing…';
+    hideResult();
+
+    try {
+      const { data, error } = await sb
+        .from('properties')
+        .upsert(parsedRows, {
+          onConflict: 'address1,address2',
+          ignoreDuplicates: false
+        });
+
+      if (error) throw error;
+
+      showResult('success', `✅ <strong>${parsedRows.length} properties imported successfully!</strong> The database has been updated and the next 5am email will include all new listings.`);
+      document.getElementById('previewSection').classList.remove('visible');
+    } catch (err) {
+      showResult('error', `❌ <strong>Import failed:</strong> ${err.message}`);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = 'Import to Database';
+    }
+  }
+
+  function showResult(type, msg) {
+    const box = document.getElementById('resultBox');
+    box.className = `result-box ${type}`;
+    box.innerHTML = msg;
+    box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function hideResult() {
+    const box = document.getElementById('resultBox');
+    box.className = 'result-box';
+    box.innerHTML = '';
+  }
+
+  function resetTool() {
+    parsedRows = [];
+    document.getElementById('fileInput').value = '';
+    document.getElementById('previewSection').classList.remove('visible');
+    hideResult();
+    dropZone.scrollIntoView({ behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>
