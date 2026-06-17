@@ -1,7 +1,7 @@
 {
-  "name": "Kam Knorwood — Property Portal",
+  "name": "Kam Norwood — Property Portal",
   "short_name": "KNorwood",
-  "description": "Property management portal for Kam Knorwood.",
+  "description": "Commercial Real Estate property portal for Kam Norwood CRE.",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
@@ -11,13 +11,13 @@
   "scope": "/",
   "icons": [
     {
-      "src": "YOUR_LOGO_URL_HERE.png",
+      "src": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/kam_profile_2.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "YOUR_LOGO_URL_HERE.png",
+      "src": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/kam_profile_2.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
