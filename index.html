@@ -1799,22 +1799,123 @@ async function drawerImportToSupabase() {
   btn.textContent = 'Importing…';
   btn.disabled = true;
 
-  const { error } = await sb.from('properties').upsert(_drawerImportRows, {
-    onConflict: 'address1,address2', ignoreDuplicates: false
-  });
-
   const result = document.getElementById('drawer-import-result');
   result.style.display = 'block';
-  if (!error) {
+
+  // ── STEP 1: Upsert properties into Supabase ──
+  const { data: upserted, error } = await sb.from('properties').upsert(_drawerImportRows, {
+    onConflict: 'address1,address2', ignoreDuplicates: false
+  }).select();
+
+  if (error) {
+    result.style.background = '#fdecea'; result.style.border = '1px solid #f5c6c2'; result.style.color = '#c0392b';
+    result.innerHTML = `❌ <strong>Import failed:</strong> ${error.message}`;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Import to Database';
+    btn.disabled = false;
+    return;
+  }
+
+  // ── STEP 2: Load all active consented clients ──
+  result.style.background = '#fff9ed'; result.style.border = '1px solid #f0d080'; result.style.color = '#7a5a00';
+  result.innerHTML = `✅ <strong>${_drawerImportRows.length} properties imported!</strong> Now blasting to matching clients…`;
+
+  const { data: clients } = await sb
+    .from('clients')
+    .select('id, name, email, status, client_search_params(*), email_consent(*)')
+    .eq('status', 'active');
+
+  const consentedClients = (clients || []).filter(c => c.email_consent?.[0]?.consented === true);
+
+  if (consentedClients.length === 0) {
     result.style.background = '#e8f5ee'; result.style.border = '1px solid #a8d5bc'; result.style.color = '#2d7a4f';
-    result.innerHTML = `✅ <strong>${_drawerImportRows.length} properties imported!</strong> Database updated — next 5am email includes all new listings.`;
+    result.innerHTML = `✅ <strong>${_drawerImportRows.length} properties imported!</strong> No consented clients to blast yet.`;
     document.getElementById('drawer-import-preview').style.display = 'none';
     document.getElementById('drawer-file-input').value = '';
     _drawerImportRows = [];
-  } else {
-    result.style.background = '#fdecea'; result.style.border = '1px solid #f5c6c2'; result.style.color = '#c0392b';
-    result.innerHTML = `❌ <strong>Import failed:</strong> ${error.message}`;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Import to Database';
+    btn.disabled = false;
+    return;
   }
+
+  // ── STEP 3: For each imported property, blast matching clients ──
+  const props = upserted || _drawerImportRows;
+  let totalSent = 0, totalFailed = 0;
+
+  for (const prop of props) {
+    // Match clients by property_type and listing_type if they have search params
+    const matchingClients = consentedClients.filter(c => {
+      const sp = c.client_search_params?.[0];
+      if (!sp) return true; // no params = send everything
+      const typeMatch = !sp.property_type || !prop.property_type ||
+        prop.property_type.toLowerCase().includes(sp.property_type.toLowerCase().split('/')[0].trim()) ||
+        sp.property_type.toLowerCase().includes(prop.property_type.toLowerCase().split('/')[0].trim());
+      const listingMatch = !sp.listing_type || sp.listing_type === prop.listing_type || sp.listing_type === 'Any';
+      return typeMatch && listingMatch;
+    });
+
+    if (matchingClients.length === 0) continue;
+
+    const price = prop.price ? '$' + Number(prop.price).toLocaleString() : 'Price Not Disclosed';
+    const sqft  = prop.sqft  ? Number(prop.sqft).toLocaleString() + ' SF' : '';
+    const cap   = prop.cap_rate ? ` · ${prop.cap_rate}% CAP` : '';
+    const oz    = prop.opportunity_zone ? ' · ★ Opportunity Zone' : '';
+    const crexi = prop.crexi_url ? `\nView on Crexi: ${prop.crexi_url}` : '';
+
+    for (const client of matchingClients) {
+      const text = `Hi ${client.name},
+
+A new listing just hit the market that I think is a strong match for you.
+
+${prop.address1} – ${prop.address2}
+${prop.property_type || ''} · ${prop.listing_type || ''}
+${price}${sqft ? ' · ' + sqft : ''}${cap}${oz}
+${prop.notes ? 'Notes: ' + prop.notes : ''}${crexi}
+
+This just came in — don't wait on it. Call or reply and I'll get you the full details immediately.
+
+Best,
+Kam Norwood
+Commercial Real Estate Broker
+(520) 360-8510
+kam@knorwoodcre.com
+knorwoodcre.com`;
+
+      try {
+        const res = await fetch('/api/send-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: client.email,
+            name: client.name,
+            subject: `🔥 New Listing — ${prop.address1}`,
+            text
+          })
+        });
+        if (res.ok) {
+          totalSent++;
+          await sb.from('email_log').insert({
+            client_id: client.id,
+            subject: `Auto-Blast: ${prop.address1}`,
+            listing_ids: prop.id ? [prop.id] : [],
+            status: 'sent'
+          });
+        } else { totalFailed++; }
+      } catch(e) { totalFailed++; }
+    }
+  }
+
+  // ── STEP 4: Show final result ──
+  result.style.background = totalFailed === 0 ? '#e8f5ee' : '#fdecea';
+  result.style.border = totalFailed === 0 ? '1px solid #a8d5bc' : '1px solid #f5c6c2';
+  result.style.color = totalFailed === 0 ? '#2d7a4f' : '#c0392b';
+  result.innerHTML = totalFailed === 0
+    ? `⚡ <strong>${_drawerImportRows.length} properties imported & blasted to ${totalSent} client${totalSent !== 1 ? 's' : ''}!</strong> They're getting the email now.`
+    : `✅ Imported. Sent ${totalSent} emails, ${totalFailed} failed — check Resend logs.`;
+
+  document.getElementById('drawer-import-preview').style.display = 'none';
+  document.getElementById('drawer-file-input').value = '';
+  _drawerImportRows = [];
+
   btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Import to Database';
   btn.disabled = false;
 }
