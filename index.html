@@ -377,16 +377,6 @@
       font-family: 'DM Sans', sans-serif;
     }
     .btn-iwant:hover { background: var(--gold-lt); border-color: var(--gold-lt); transform: translateY(-1px); }
-    .btn-iwant.iwant-selected {
-      background: #c0392b;
-      border-color: #c0392b;
-      cursor: default;
-    }
-    .btn-iwant.iwant-selected:hover {
-      background: #c0392b;
-      border-color: #c0392b;
-      transform: none;
-    }
     .btn-iwant svg { width: 13px; height: 13px; flex-shrink: 0; }
 
     /* ── I WANT THIS MODAL ── */
@@ -1272,20 +1262,19 @@ function renderListings() {
       : `<span class="btn-flyer placeholder">${flyerIcon} Flyer Coming</span>`;
 
 
-    const pid = p.id;
     const a1 = (p.address1||'').replace(/"/g,'&quot;');
     const a2 = (p.address2||'').replace(/"/g,'&quot;');
     const pr = (p.price||'').replace(/"/g,'&quot;');
     const ty = (p.type||'').replace(/"/g,'&quot;');
-    const iwantBtn = '<button class="btn-iwant" id="iwant-btn-' + pid + '" '
-      + 'data-address1="' + a1 + '" '
-      + 'data-address2="' + a2 + '" '
-      + 'data-price="' + pr + '" '
-      + 'data-type="' + ty + '" '
-      + 'data-pid="' + pid + '" '
-      + 'onclick="openIWant(this)">'
+    const iwantBtn = '<button class="btn-iwant"'
+      + ' data-address1="' + a1 + '"'
+      + ' data-address2="' + a2 + '"'
+      + ' data-price="' + pr + '"'
+      + ' data-type="' + ty + '"'
+      + ' data-pid="' + p.id + '"'
+      + ' onclick="openIWant(this)">'
       + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>'
-      + '<span class="iwant-label"> I Want This</span></button>';
+      + ' I Want This</button>';
 
     const actionsHtml = '<div class="card-actions">' + flyerBtn + iwantBtn + '</div>';
 
@@ -2089,9 +2078,8 @@ They clicked "I Want This" on knorwoodcre.com — reach out now while interest i
       })
     });
 
-    const responseData = await res.json().catch(() => ({}));
-    if (res.ok) {
-      // Also log to Supabase
+    const respData = await res.json().catch(() => ({}));
+    if (res.ok || respData.success) {
       await sb.from('email_log').insert({
         subject: `I Want This: ${_iwantProp.address1} — ${name}`,
         status: 'sent'
@@ -2100,8 +2088,7 @@ They clicked "I Want This" on knorwoodcre.com — reach out now while interest i
       document.getElementById('iwant-form').style.display = 'none';
       document.getElementById('iwant-result').style.display = 'block';
     } else {
-      const errMsg = responseData.error || 'Unknown error';
-      showToast('Error: ' + errMsg, true);
+      showToast('Error: ' + (respData.error || 'Please call Kam directly.'), true);
       btn.innerHTML = '⚡ Send to Kam';
       btn.disabled = false;
     }
@@ -2140,13 +2127,15 @@ function showToast(msg, isError = false) {
   }
 })();
 
-// Pre-filter images: remove broken URLs before rendering
+// Render immediately, then silently filter broken images in background
+renderListings();
 (async function() {
   function testImg(url) {
     return new Promise(function(res) {
       var i = new Image();
       i.onload = function() { res(true); };
       i.onerror = function() { res(false); };
+      setTimeout(function() { res(false); }, 3000); // 3s timeout max
       i.src = url;
     });
   }
