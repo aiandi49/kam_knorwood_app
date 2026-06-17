@@ -377,6 +377,16 @@
       font-family: 'DM Sans', sans-serif;
     }
     .btn-iwant:hover { background: var(--gold-lt); border-color: var(--gold-lt); transform: translateY(-1px); }
+    .btn-iwant.iwant-selected {
+      background: #c0392b;
+      border-color: #c0392b;
+      cursor: default;
+    }
+    .btn-iwant.iwant-selected:hover {
+      background: #c0392b;
+      border-color: #c0392b;
+      transform: none;
+    }
     .btn-iwant svg { width: 13px; height: 13px; flex-shrink: 0; }
 
     /* ── I WANT THIS MODAL ── */
@@ -1262,9 +1272,20 @@ function renderListings() {
       : `<span class="btn-flyer placeholder">${flyerIcon} Flyer Coming</span>`;
 
 
-    const iwantBtn = '<button class="btn-iwant" onclick="openIWant(' + JSON.stringify(p.address1) + ',' + JSON.stringify(p.address2) + ',' + JSON.stringify(p.price) + ',' + JSON.stringify(p.type||'') + ')">'
+    const pid = p.id;
+    const a1 = (p.address1||'').replace(/"/g,'&quot;');
+    const a2 = (p.address2||'').replace(/"/g,'&quot;');
+    const pr = (p.price||'').replace(/"/g,'&quot;');
+    const ty = (p.type||'').replace(/"/g,'&quot;');
+    const iwantBtn = '<button class="btn-iwant" id="iwant-btn-' + pid + '" '
+      + 'data-address1="' + a1 + '" '
+      + 'data-address2="' + a2 + '" '
+      + 'data-price="' + pr + '" '
+      + 'data-type="' + ty + '" '
+      + 'data-pid="' + pid + '" '
+      + 'onclick="openIWant(this)">'
       + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>'
-      + ' I Want This</button>';
+      + '<span class="iwant-label"> I Want This</span></button>';
 
     const actionsHtml = '<div class="card-actions">' + flyerBtn + iwantBtn + '</div>';
 
@@ -2007,10 +2028,15 @@ knorwoodcre.com`;
 // ═══════════════════════════════════════════════════════════════
 let _iwantProp = {};
 
-function openIWant(address1, address2, price, type) {
-  _iwantProp = { address1, address2, price, type };
+function openIWant(btn) {
+  const address1 = btn.dataset.address1;
+  const address2 = btn.dataset.address2;
+  const price    = btn.dataset.price;
+  const type     = btn.dataset.type;
+  const pid      = btn.dataset.pid;
+  _iwantProp = { address1, address2, price, type, pid, btn };
   document.getElementById('iwant-prop-name').textContent = address1;
-  document.getElementById('iwant-prop-detail').textContent = `${address2}  ·  ${price}  ·  ${type}`;
+  document.getElementById('iwant-prop-detail').textContent = address2 + '  ·  ' + price + '  ·  ' + type;
   document.getElementById('iwant-form').style.display = 'block';
   document.getElementById('iwant-result').style.display = 'none';
   document.getElementById('iwant-name').value = '';
@@ -2072,6 +2098,11 @@ They clicked "I Want This" on knorwoodcre.com — reach out now while interest i
 
       document.getElementById('iwant-form').style.display = 'none';
       document.getElementById('iwant-result').style.display = 'block';
+      // Turn heart red and mark as selected
+      if (_iwantProp.btn) {
+        _iwantProp.btn.classList.add('iwant-selected');
+        _iwantProp.btn.querySelector('.iwant-label').textContent = '♥ Selected';
+      }
     } else {
       showToast('Something went wrong. Please call Kam directly.', true);
       btn.textContent = '⚡ Send to Kam';
