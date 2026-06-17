@@ -6,18 +6,17 @@ import { createClient } from '@supabase/supabase-js';
 
 const sb = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY  // service key needed for server-side reads
+  process.env.SUPABASE_SERVICE_KEY
 );
 
 export default async function handler(req, res) {
-  // Protect: only Vercel cron or our own calls
   const auth = req.headers['authorization'];
   if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
   try {
-    // 1. Get all active clients with their search params
+    // 1. Get all active consented clients with their search params
     const { data: clients, error: clientErr } = await sb
       .from('clients')
       .select(`
@@ -46,9 +45,7 @@ export default async function handler(req, res) {
 
     let sent = 0, skipped = 0;
 
-    // 3. For each client, find matching properties and send email
     for (const client of clients) {
-      const params = client.client_search_params?.[0];
       // Skip clients who haven't confirmed opt-in
       const consented = client.email_consent?.[0]?.consented;
       if (!consented) {
@@ -56,14 +53,24 @@ export default async function handler(req, res) {
         continue;
       }
 
-      const matches = matchProperties(properties, params);
+      const params = client.client_search_params?.[0];
 
+      // Try to find matching properties
+      let matches = matchProperties(properties, params);
+
+      // If no matches, send ALL properties so client always gets something
+      const isFallback = matches.length === 0;
+      if (isFallback) {
+        matches = properties;
+      }
+
+      // If still no properties at all, skip
       if (matches.length === 0) {
         skipped++;
         continue;
       }
 
-      const emailBody = buildEmailBody(client.name, matches);
+      const emailBody = buildEmailBody(client.name, matches, isFallback);
 
       const emailRes = await fetch('https://api.resend.com/emails', {
         method: 'POST',
@@ -82,7 +89,6 @@ export default async function handler(req, res) {
 
       const status = emailRes.ok ? 'sent' : 'failed';
 
-      // Log to Supabase
       await sb.from('email_log').insert({
         client_id: client.id,
         subject: 'Daily Property Update',
@@ -109,15 +115,13 @@ export default async function handler(req, res) {
 
 // ── MATCHING LOGIC ──────────────────────────────────────────
 function matchProperties(properties, params) {
-  if (!params) return properties; // no params = send everything
+  if (!params) return properties;
 
   return properties.filter(p => {
-    // Property type match (flexible — checks if either contains the other)
     if (params.property_type && params.property_type !== '') {
       const clientType = params.property_type.toLowerCase();
       const propType = (p.property_type || '').toLowerCase();
       if (!propType.includes(clientType) && !clientType.includes(propType)) {
-        // also check word overlap
         const clientWords = clientType.split(/[\s\/]+/);
         const propWords = propType.split(/[\s\/]+/);
         const overlap = clientWords.some(w => propWords.includes(w));
@@ -125,13 +129,11 @@ function matchProperties(properties, params) {
       }
     }
 
-    // Listing type match
     if (params.listing_type && params.listing_type !== '') {
       if (p.listing_type !== params.listing_type &&
           p.listing_type !== 'For Sale or Lease') return false;
     }
 
-    // Price range
     if (params.price_min && p.price !== null) {
       const min = parsePrice(params.price_min);
       if (min && p.price < min) return false;
@@ -141,7 +143,6 @@ function matchProperties(properties, params) {
       if (max && p.price > max) return false;
     }
 
-    // Size range
     if (params.size_min && p.sqft !== null) {
       const min = parseInt(params.size_min.replace(/,/g, ''));
       if (!isNaN(min) && p.sqft < min) return false;
@@ -151,13 +152,11 @@ function matchProperties(properties, params) {
       if (!isNaN(max) && p.sqft > max) return false;
     }
 
-    // CAP rate minimum
     if (params.cap_rate_min && p.cap_rate !== null) {
       const min = parseFloat(params.cap_rate_min);
       if (!isNaN(min) && p.cap_rate < min) return false;
     }
 
-    // Opportunity Zone
     if (params.opportunity_zone && !p.opportunity_zone) return false;
 
     return true;
@@ -173,7 +172,7 @@ function parsePrice(val) {
 }
 
 // ── EMAIL TEMPLATE ──────────────────────────────────────────
-function buildEmailBody(clientName, properties) {
+function buildEmailBody(clientName, properties, isFallback) {
   const date = new Date().toLocaleDateString('en-US', {
     weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
   });
@@ -183,23 +182,25 @@ function buildEmailBody(clientName, properties) {
     const sqft = p.sqft ? `${p.sqft.toLocaleString()} SF` : '';
     const cap = p.cap_rate ? ` · ${p.cap_rate}% CAP` : '';
     const oz = p.opportunity_zone ? ' · ★ Opportunity Zone' : '';
-    const kam = p.kam_listing ? ' [KAM\'S LISTING]' : '';
+    const kam = p.kam_listing ? " [KAM'S LISTING]" : '';
 
     return [
       `${p.address1} – ${p.address2}${kam}`,
       `${p.property_type} · ${p.listing_type}`,
-      `${price} · ${sqft}${cap}${oz}`,
+      `${price}${sqft ? ' · ' + sqft : ''}${cap}${oz}`,
       p.notes ? `Notes: ${p.notes}` : '',
       p.crexi_url ? `View on Crexi: ${p.crexi_url}` : '',
       ''
     ].filter(Boolean).join('\n');
   }).join('\n---\n\n');
 
+  const intro = isFallback
+    ? `Here are today's available commercial listings from Kam Norwood CRE for ${date}.\n\nNo properties exactly matched your saved search criteria today, but here's everything currently available — something here may interest you:`
+    : `Here is your daily property update from Kam Norwood CRE for ${date}.\n\nI've matched ${properties.length} propert${properties.length === 1 ? 'y' : 'ies'} to your search criteria:`;
+
   return `Hi ${clientName},
 
-Here is your daily property update from Kam Norwood CRE for ${date}.
-
-I've matched ${properties.length} propert${properties.length === 1 ? 'y' : 'ies'} to your search criteria:
+${intro}
 
 ${listings}
 
