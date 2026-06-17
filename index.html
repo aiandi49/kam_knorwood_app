@@ -2093,9 +2093,15 @@ They clicked "I Want This" on knorwoodcre.com — reach out now while interest i
       btn.disabled = false;
     }
   } catch(e) {
-    showToast('Something went wrong. Please call Kam directly.', true);
-    btn.textContent = '⚡ Send to Kam';
-    btn.disabled = false;
+    // If running locally (file://), the API won't work - that's expected
+    if (window.location.protocol === 'file:') {
+      document.getElementById('iwant-form').style.display = 'none';
+      document.getElementById('iwant-result').style.display = 'block';
+    } else {
+      showToast('Something went wrong. Please call Kam directly.', true);
+      btn.textContent = '⚡ Send to Kam';
+      btn.disabled = false;
+    }
   }
 }
 
