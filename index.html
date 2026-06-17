@@ -2089,6 +2089,7 @@ They clicked "I Want This" on knorwoodcre.com — reach out now while interest i
       })
     });
 
+    const responseData = await res.json().catch(() => ({}));
     if (res.ok) {
       // Also log to Supabase
       await sb.from('email_log').insert({
@@ -2098,14 +2099,10 @@ They clicked "I Want This" on knorwoodcre.com — reach out now while interest i
 
       document.getElementById('iwant-form').style.display = 'none';
       document.getElementById('iwant-result').style.display = 'block';
-      // Turn heart red and mark as selected
-      if (_iwantProp.btn) {
-        _iwantProp.btn.classList.add('iwant-selected');
-        _iwantProp.btn.querySelector('.iwant-label').textContent = '♥ Selected';
-      }
     } else {
-      showToast('Something went wrong. Please call Kam directly.', true);
-      btn.textContent = '⚡ Send to Kam';
+      const errMsg = responseData.error || 'Unknown error';
+      showToast('Error: ' + errMsg, true);
+      btn.innerHTML = '⚡ Send to Kam';
       btn.disabled = false;
     }
   } catch(e) {
