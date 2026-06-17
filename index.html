@@ -2063,7 +2063,7 @@ async function submitIWant() {
     + 'Phone: ' + (phone || 'Not provided') + '\n\n'
     + 'They clicked "I Want This" on knorwoodcre.com — reach out now while interest is hot!';
 
-  // Always show success — if on live site the email fires, if local it's just a preview
+  // Show success screen
   const showSuccess = function() {
     document.getElementById('iwant-form').style.display = 'none';
     document.getElementById('iwant-result').style.display = 'block';
@@ -2076,7 +2076,8 @@ async function submitIWant() {
   }
 
   try {
-    const res = await fetch('/api/send-email', {
+    // 1. Email alert to Kam
+    fetch('/api/send-email', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -2085,15 +2086,59 @@ async function submitIWant() {
         subject: '🔥 ' + name + ' wants ' + _iwantProp.address1,
         text: text
       })
-    });
+    }).catch(() => {});
 
-    // Show success regardless — Vercel logs confirmed 200 is returned
-    showSuccess();
+    // 2. Confirmation email to the person who clicked I Want This
+    const confirmText = 'Hi ' + name + ',\n\n'
+      + 'Thank you for your interest in ' + _iwantProp.address1 + '!\n\n'
+      + 'Kam Norwood has been notified and will reach out to you shortly.\n\n'
+      + 'Property details:\n'
+      + _iwantProp.address1 + '\n'
+      + _iwantProp.address2 + '\n'
+      + _iwantProp.price + '\n\n'
+      + 'In the meantime, feel free to call Kam directly:\n'
+      + '(520) 360-8510\n'
+      + 'kam@knorwoodcre.com\n\n'
+      + 'Best regards,\n'
+      + 'Kam Norwood\n'
+      + 'Commercial Real Estate Broker\n'
+      + 'Knorwood CRE\n'
+      + 'knorwoodcre.com';
+
+    fetch('/api/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: email,
+        name: name,
+        subject: 'Your interest in ' + _iwantProp.address1 + ' — Knorwood CRE',
+        text: confirmText
+      })
+    }).catch(() => {});
+
+    // 3. SMS alert to Kam (non-blocking)
+    const smsMsg = '🔥 NEW LEAD\n'
+      + name + ' wants ' + _iwantProp.address1 + '\n'
+      + 'Price: ' + _iwantProp.price + '\n'
+      + 'Email: ' + email + '\n'
+      + (phone ? 'Phone: ' + phone : '')
+      + '\nReach out now!';
+
+    fetch('/api/send-sms', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: process.env.KAM_PHONE || '+15203608510',
+        message: smsMsg
+      })
+    }).catch(() => {});
 
   } catch(e) {
-    // Network error — still show success, Kam can follow up
-    showSuccess();
+    // Silent fail — success screen already shown
   }
+
+  // Always show success
+  showSuccess();
 }
 
 // ═══════════════════════════════════════════════════════════════
