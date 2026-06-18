@@ -540,8 +540,68 @@
     @keyframes fadeUp   { from { opacity:0; transform: translateY(12px);  } to { opacity:1; transform: none; } }
 
     @media (max-width: 600px) {
-      .property-grid { grid-template-columns: 1fr; }
-      header { grid-template-columns: auto 1fr; }
+      /* PAGE */
+      .page { padding: 0 14px 60px; }
+
+      /* HEADER */
+      header {
+        grid-template-columns: 1fr;
+        text-align: center;
+        justify-items: center;
+        gap: 12px;
+        padding: 24px 0 20px;
+        margin-bottom: 20px;
+      }
+      header img { margin: 0 auto; }
+      .agent-name { font-size: 1.3rem; text-align: center; }
+      .agent-title { text-align: center; font-size: 0.72rem; }
+      .btn-clients { margin: 4px auto 0; }
+
+      /* FILTER TABS */
+      .filter-tabs { justify-content: center; gap: 6px; }
+      .filter-tab { font-size: 0.75rem; padding: 6px 14px; }
+
+      /* RESULTS META */
+      .results-meta { text-align: center; }
+
+      /* PROPERTY GRID */
+      .property-grid { grid-template-columns: 1fr; gap: 16px; }
+
+      /* CARD BODY — center everything */
+      .card-body { align-items: center; text-align: center; }
+      .listing-type-badge { align-self: center; }
+      .card-price { text-align: center; }
+      .card-address-1, .card-address-2 { text-align: center; }
+      .card-metrics { justify-content: center; }
+      .card-actions { justify-content: center; }
+
+      /* BROKER STRIP */
+      .broker-strip {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 8px;
+        margin: 0 12px 14px;
+        padding: 12px;
+      }
+      .broker-strip::before { display: none; }
+      .broker-details { text-align: center; }
+      .broker-name { white-space: normal; }
+      .broker-meta { white-space: normal; }
+
+      /* ADMIN DRAWER full width */
+      .client-drawer { width: 100vw; right: -100vw; }
+      .drawer-tab { padding: 9px 10px; font-size: 0.72rem; }
+      .form-grid { grid-template-columns: 1fr; }
+
+      /* MODAL */
+      #iwant-modal { padding: 24px 18px; }
+
+      /* FOOTER */
+      footer { text-align: center; padding: 28px 0 0; }
+
+      /* TOAST */
+      .toast-msg { width: 88vw; text-align: center; }
     }
 
     /* ── MY CLIENTS BUTTON ─────────────────────────────────── */
