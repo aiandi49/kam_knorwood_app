@@ -11,13 +11,13 @@
   "scope": "/",
   "icons": [
     {
-      "src": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/kam_profile_2.png",
+      "src": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/kam_logo_app.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/kam_profile_2.png",
+      "src": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/kam_logo_app.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
