@@ -201,6 +201,21 @@ body{background:var(--cream);color:var(--ink);font-family:'DM Sans',sans-serif;m
   .p-header-inner{grid-template-columns:auto 1fr auto}
   .p-brand-name{font-size:17px}
 }
+
+    /* ── LISTING TYPE FILTER TABS (match index.html filter-tab exactly) ── */
+    .prop-filter-tabs { padding:20px 0 16px; display:flex; gap:8px; flex-wrap:wrap; }
+    .pf-tab {
+      padding: 8px 18px;
+      border-radius: 100px;
+      border: 1px solid var(--border-md);
+      background: var(--white);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.8rem; font-weight: 500;
+      color: var(--ink-mid);
+      cursor: pointer; transition: all 0.18s;
+    }
+    .pf-tab:hover { border-color: var(--gold); color: var(--gold); }
+    .pf-tab.active { background: var(--ink); color: var(--white); border-color: var(--ink); }
 </style>
 </head>
 <body>
