@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Client Portal — Kam Norwood CRE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --cream:#F7F4EE;
+  --warm:#EDE8DF;
+  --gold:#B8963E;
+  --gold-dk:#9A7D32;
+  --ink:#1C1A17;
+  --ink-mid:#4A4640;
+  --ink-mute:#8A837A;
+  --border:rgba(100,90,76,0.15);
+  --border-md:rgba(100,90,76,0.3);
+  --shadow-sm:0 1px 4px rgba(0,0,0,0.06);
+  --shadow-md:0 4px 16px rgba(0,0,0,0.08);
+  --shadow-lg:0 8px 32px rgba(0,0,0,0.12);
+  --green:#2d7a4f;
+  --red:#c0392b;
+  --gold-border:2px solid #c9a84c;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--cream);color:var(--ink);font-family:'DM Sans',sans-serif;min-height:100vh}
+
+/* ---- AUTH SCREEN ---- */
+#auth-screen{
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;padding:24px;
+}
+.auth-box{
+  background:#fff;border-radius:20px;border:1px solid var(--border);
+  box-shadow:var(--shadow-lg);width:100%;max-width:440px;padding:40px;
+}
+.auth-logo{display:flex;align-items:center;gap:12px;margin-bottom:32px}
+.auth-logo img{width:52px;height:52px;border-radius:50%;object-fit:cover}
+.auth-logo-text{line-height:1.2}
+.auth-logo-name{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--ink)}
+.auth-logo-sub{font-size:11px;color:var(--ink-mute);text-transform:uppercase;letter-spacing:0.07em}
+.auth-tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:28px}
+.auth-tab{
+  flex:1;padding:10px;font-size:14px;font-weight:500;color:var(--ink-mute);
+  background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;
+  margin-bottom:-2px;transition:all 0.2s;
+}
+.auth-tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+.auth-field{margin-bottom:16px}
+.auth-field label{display:block;font-size:12px;font-weight:600;letter-spacing:0.05em;color:var(--ink-mid);text-transform:uppercase;margin-bottom:6px}
+.auth-field input,.auth-field select{
+  width:100%;padding:11px 14px;border:1.5px solid var(--border-md);border-radius:10px;
+  font-family:'DM Sans',sans-serif;font-size:14px;color:var(--ink);background:#fff;
+  transition:border-color 0.2s;outline:none;
+}
+.auth-field input:focus,.auth-field select:focus{border-color:var(--gold)}
+.auth-field select option{background:#fff}
+.btn-gold{
+  width:100%;padding:13px;background:var(--gold);color:#fff;border:none;
+  border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;
+  transition:background 0.2s;margin-top:4px;
+}
+.btn-gold:hover{background:var(--gold-dk)}
+.btn-gold:disabled{opacity:0.5;cursor:not-allowed}
+.auth-err{color:var(--red);font-size:13px;margin-top:10px;min-height:18px}
+.auth-divider{text-align:center;color:var(--ink-mute);font-size:12px;margin:16px 0}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* ---- PROFILE SETUP ---- */
+#profile-screen{display:none;min-height:100vh;padding:24px;align-items:flex-start;justify-content:center}
+#profile-screen.visible{display:flex}
+.profile-box{
+  background:#fff;border-radius:20px;border:1px solid var(--border);
+  box-shadow:var(--shadow-lg);width:100%;max-width:540px;padding:40px;margin-top:40px;
+}
+.profile-box h2{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;margin-bottom:6px}
+.profile-box .sub{color:var(--ink-mute);font-size:14px;margin-bottom:28px}
+.section-label{font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--gold);margin:20px 0 12px;border-bottom:1px solid var(--border);padding-bottom:6px}
+
+/* ---- MAIN APP ---- */
+#app-screen{display:none}
+#app-screen.visible{display:block}
+
+/* HEADER */
+.app-header{
+  background:#fff;border-bottom:1px solid var(--border);
+  padding:0 24px;position:sticky;top:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;height:64px;
+}
+.header-left{display:flex;align-items:center;gap:12px}
+.header-left img{width:38px;height:38px;border-radius:50%;object-fit:cover}
+.header-name{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600}
+.header-sub{font-size:11px;color:var(--ink-mute);text-transform:uppercase;letter-spacing:0.05em}
+.header-right{display:flex;align-items:center;gap:12px}
+.user-badge{
+  background:var(--warm);border:1px solid var(--border);border-radius:99px;
+  padding:6px 14px;font-size:13px;font-weight:500;color:var(--ink-mid);
+}
+.btn-logout{
+  background:none;border:1.5px solid var(--border-md);border-radius:8px;
+  padding:7px 14px;font-size:13px;font-weight:500;color:var(--ink-mute);cursor:pointer;
+  transition:all 0.2s;
+}
+.btn-logout:hover{border-color:var(--ink-mute);color:var(--ink)}
+
+/* TABS */
+.main-tabs{
+  display:flex;gap:8px;padding:20px 24px 0;background:#fff;
+  border-bottom:1px solid var(--border);
+}
+.main-tab{
+  padding:10px 20px;font-size:14px;font-weight:500;border:none;background:none;
+  cursor:pointer;color:var(--ink-mute);border-bottom:2px solid transparent;
+  margin-bottom:-1px;transition:all 0.2s;border-radius:8px 8px 0 0;
+}
+.main-tab.active{color:var(--gold);border-bottom-color:var(--gold);background:var(--cream)}
+
+/* CONTENT */
+.main-content{padding:24px;max-width:1200px;margin:0 auto}
+.results-meta{font-size:13px;color:var(--ink-mute);margin-bottom:20px}
+.results-meta span{font-weight:600;color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px}
+
+/* CARD */
+.card{
+  background:#fff;border-radius:14px;border:1px solid var(--border);
+  box-shadow:var(--shadow-sm);overflow:hidden;
+  transition:transform 0.25s,box-shadow 0.25s;
+  display:flex;flex-direction:column;
+}
+.card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}
+.card-img{position:relative;aspect-ratio:16/9;background:var(--warm);overflow:hidden;cursor:pointer}
+.card-img img{width:100%;height:100%;object-fit:cover;transition:transform 0.3s}
+.card:hover .card-img img{transform:scale(1.03)}
+.card-img-placeholder{
+  width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+  color:var(--border-md);
+}
+.img-counter{
+  position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,0.5);
+  color:#fff;font-size:11px;border-radius:6px;padding:3px 8px;
+}
+.img-nav{
+  position:absolute;top:50%;transform:translateY(-50%);
+  background:rgba(255,255,255,0.85);border:none;cursor:pointer;
+  width:28px;height:28px;border-radius:50%;font-size:14px;
+  display:flex;align-items:center;justify-content:center;
+  transition:background 0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.15);
+}
+.img-nav:hover{background:#fff}
+.img-nav.prev{left:8px}
+.img-nav.next{right:8px}
+.card-body{padding:16px;flex:1;display:flex;flex-direction:column;gap:10px}
+.listing-type-badge{
+  display:inline-flex;align-items:center;
+  padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700;
+  letter-spacing:0.04em;text-transform:uppercase;
+}
+.badge-sale{background:#e8f5ee;color:#2d7a4f}
+.badge-lease{background:#e8f0fb;color:#3557a0}
+.badge-either{background:#fff4e0;color:#9a6200}
+.card-price{font-size:22px;font-weight:700;color:var(--ink);line-height:1.1}
+.card-price.big{font-size:26px}
+.card-address{font-size:14px;font-weight:600;color:var(--ink)}
+.card-city{font-size:12px;color:var(--ink-mute)}
+.card-meta{font-size:12px;color:var(--ink-mute);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.meta-dot{width:3px;height:3px;border-radius:50%;background:var(--ink-mute)}
+.card-actions{display:flex;gap:8px;margin-top:4px}
+.btn-save{
+  flex:1;padding:9px;border-radius:8px;font-size:13px;font-weight:600;
+  cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:6px;
+  border:1.5px solid var(--border-md);background:#fff;color:var(--ink-mid);
+}
+.btn-save:hover{border-color:var(--gold);color:var(--gold)}
+.btn-save.saved{border-color:var(--gold);background:var(--gold);color:#fff}
+.btn-want{
+  flex:1;padding:9px;border-radius:8px;font-size:13px;font-weight:600;
+  cursor:pointer;background:var(--gold);color:#fff;border:none;
+  transition:background 0.2s;display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.btn-want:hover{background:var(--gold-dk)}
+.btn-want:disabled{opacity:0.5;cursor:not-allowed}
+.card-links{display:flex;gap:8px;flex-wrap:wrap}
+.link-pill{
+  font-size:11px;font-weight:600;color:var(--gold);text-decoration:none;
+  border:1px solid var(--border);border-radius:6px;padding:4px 10px;
+  transition:all 0.2s;white-space:nowrap;
+}
+.link-pill:hover{background:var(--warm);border-color:var(--gold)}
+
+/* EMPTY STATE */
+.empty{
+  grid-column:1/-1;text-align:center;padding:80px 20px;
+  color:var(--ink-mute);
+}
+.empty-icon{font-size:48px;margin-bottom:16px}
+.empty h3{font-size:18px;font-weight:600;color:var(--ink-mid);margin-bottom:8px}
+
+/* TOAST */
+.toast{
+  position:fixed;bottom:24px;right:24px;z-index:9999;
+  background:#1c1a17;color:#fff;padding:12px 20px;border-radius:10px;
+  font-size:14px;font-weight:500;box-shadow:var(--shadow-lg);
+  transform:translateY(80px);opacity:0;transition:all 0.3s;
+  max-width:340px;
+}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{border-left:4px solid #2d7a4f}
+.toast.error{border-left:4px solid var(--red)}
+
+/* INTEREST MODAL */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:500;
+  display:none;align-items:center;justify-content:center;padding:20px;
+}
+.modal-overlay.open{display:flex}
+.modal{
+  background:#fff;border-radius:16px;padding:32px;max-width:440px;width:100%;
+  box-shadow:var(--shadow-lg);
+}
+.modal h3{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;margin-bottom:6px}
+.modal p{font-size:14px;color:var(--ink-mute);margin-bottom:20px}
+.modal-property{
+  background:var(--warm);border-radius:10px;padding:12px 16px;margin-bottom:20px;
+  font-size:14px;font-weight:600;color:var(--ink);
+}
+.modal-actions{display:flex;gap:10px}
+.btn-cancel{
+  flex:1;padding:11px;border-radius:9px;border:1.5px solid var(--border-md);
+  background:#fff;font-size:14px;font-weight:600;color:var(--ink-mute);cursor:pointer;
+}
+.btn-confirm{
+  flex:2;padding:11px;border-radius:9px;border:none;
+  background:var(--gold);color:#fff;font-size:14px;font-weight:600;cursor:pointer;
+}
+
+/* RESPONSIVE */
+@media(max-width:600px){
+  .auth-box,.profile-box{padding:28px 20px}
+  .field-row{grid-template-columns:1fr}
+  .main-content{padding:16px}
+  .grid{grid-template-columns:1fr}
+  .app-header{padding:0 16px}
+  .header-name{font-size:15px}
+  .main-tabs{padding:16px 16px 0;gap:4px}
+  .main-tab{padding:8px 12px;font-size:13px}
+}
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <img src="https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/kam_headshot.jpg"
+           onerror="this.style.display='none'" alt="Kam Norwood"/>
+      <div class="auth-logo-text">
+        <div class="auth-logo-name">Kam Norwood</div>
+        <div class="auth-logo-sub">Client Property Portal</div>
+      </div>
+    </div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-signin" onclick="switchAuthTab('signin')">Sign In</button>
+      <button class="auth-tab" id="tab-signup" onclick="switchAuthTab('signup')">Create Account</button>
+    </div>
+
+    <!-- SIGN IN -->
+    <div id="signin-form">
+      <div class="auth-field">
+        <label>Email</label>
+        <input type="email" id="si-email" placeholder="you@example.com" autocomplete="email"/>
+      </div>
+      <div class="auth-field">
+        <label>Password</label>
+        <input type="password" id="si-password" placeholder="Your password" autocomplete="current-password"/>
+      </div>
+      <button class="btn-gold" id="si-btn" onclick="doSignIn()">Sign In</button>
+      <div class="auth-err" id="si-err"></div>
+    </div>
+
+    <!-- SIGN UP -->
+    <div id="signup-form" style="display:none">
+      <div class="auth-field">
+        <label>Email</label>
+        <input type="email" id="su-email" placeholder="you@example.com" autocomplete="email"/>
+      </div>
+      <div class="auth-field">
+        <label>Password</label>
+        <input type="password" id="su-password" placeholder="Choose a strong password" autocomplete="new-password"/>
+      </div>
+      <div class="auth-field">
+        <label>Confirm Password</label>
+        <input type="password" id="su-password2" placeholder="Repeat password"/>
+      </div>
+      <button class="btn-gold" id="su-btn" onclick="doSignUp()">Create Account & Continue</button>
+      <div class="auth-err" id="su-err"></div>
+      <div class="auth-divider">Already have an account? <a href="#" onclick="switchAuthTab('signin');return false" style="color:var(--gold)">Sign in</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- PROFILE SETUP SCREEN -->
+<div id="profile-screen">
+  <div class="profile-box">
+    <h2>Welcome! Let's set up your profile.</h2>
+    <p class="sub">Tell Kam what you're looking for so he can match you with the right properties.</p>
+
+    <div class="section-label">Your Information</div>
+    <div class="auth-field">
+      <label>Full Name *</label>
+      <input type="text" id="p-name" placeholder="Your full name"/>
+    </div>
+    <div class="field-row">
+      <div class="auth-field">
+        <label>Phone</label>
+        <input type="tel" id="p-phone" placeholder="(520) 000-0000"/>
+      </div>
+      <div class="auth-field">
+        <label>Company</label>
+        <input type="text" id="p-company" placeholder="Your company"/>
+      </div>
+    </div>
+
+    <div class="section-label">Property Preferences</div>
+    <div class="field-row">
+      <div class="auth-field">
+        <label>Property Type</label>
+        <select id="p-proptype">
+          <option value="">Any type</option>
+          <option>Industrial</option>
+          <option>Industrial / Manufacturing</option>
+          <option>Industrial / Office / Retail</option>
+          <option>Office</option>
+          <option>Retail</option>
+          <option>Land</option>
+          <option>Special Purpose</option>
+        </select>
+      </div>
+      <div class="auth-field">
+        <label>Looking to</label>
+        <select id="p-listtype">
+          <option value="">Buy or Lease</option>
+          <option value="For Sale">Buy</option>
+          <option value="For Lease">Lease</option>
+          <option value="For Sale or Lease">Either</option>
+        </select>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="auth-field">
+        <label>Budget Min</label>
+        <input type="text" id="p-pricemin" placeholder="e.g. $500,000"/>
+      </div>
+      <div class="auth-field">
+        <label>Budget Max</label>
+        <input type="text" id="p-pricemax" placeholder="e.g. $2,000,000"/>
+      </div>
+    </div>
+    <div class="auth-field">
+      <label>Min Size (SF)</label>
+      <input type="text" id="p-sizemin" placeholder="e.g. 2,000"/>
+    </div>
+
+    <button class="btn-gold" id="profile-btn" onclick="saveProfile()" style="margin-top:8px">
+      Save &amp; Browse Properties →
+    </button>
+    <div class="auth-err" id="profile-err"></div>
+  </div>
+</div>
+
+<!-- MAIN APP SCREEN -->
+<div id="app-screen">
+  <div class="app-header">
+    <div class="header-left">
+      <img src="https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/kam_headshot.jpg"
+           onerror="this.style.display='none'" alt="Kam Norwood"/>
+      <div>
+        <div class="header-name">Kam Norwood CRE</div>
+        <div class="header-sub">Commercial Real Estate</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="user-badge" id="user-badge">Loading...</div>
+      <button class="btn-logout" onclick="doLogout()">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="main-tabs">
+    <button class="main-tab active" id="tab-all" onclick="switchTab('all')">⭐ All Listings</button>
+    <button class="main-tab" id="tab-saved" onclick="switchTab('saved')">♡ Saved</button>
+  </div>
+
+  <div class="main-content">
+    <div class="results-meta" id="results-meta"></div>
+    <div class="grid" id="prop-grid"></div>
+  </div>
+</div>
+
+<!-- INTEREST CONFIRMATION MODAL -->
+<div class="modal-overlay" id="interest-modal">
+  <div class="modal">
+    <h3>Let Kam Know You're Interested</h3>
+    <p>Kam will reach out to you about this property.</p>
+    <div class="modal-property" id="modal-prop-name"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-confirm" id="modal-confirm-btn" onclick="confirmInterest()">♡ I Want This</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://mlgmigguhljsiopctkkj.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1sZ21pZ2d1aGxqc2lvcGN0a2tqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMDM3NzcsImV4cCI6MjA4OTY3OTc3N30.rwX3Ck09LwcUyT7SntrRA8rtFmExRlPLsG3iQPMjBSs';
+const KAM_EMAIL = 'knorwood@picor.com'; // ← UPDATE IF DIFFERENT
+
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const LISTINGS = [{"id": 21, "kamListing": true, "address1": "4164 N Flowing Wells Rd", "listingType": "For Sale or Lease", "address2": "Tucson, AZ 85705", "price": "$390,000", "type": "Industrial / Office / Retail", "sqft": "2,996", "capRate": "", "opportunityZone": false, "images": ["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4164_n_flowing_wells_rd/1.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4164_n_flowing_wells_rd/2.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4164_n_flowing_wells_rd/3.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4164_n_flowing_wells_rd/4.jpg"], "imageUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/kams_portfolio/4164_n_flowing_wells_rd/1.jpg", "crexiUrl": "https://www.crexi.com/properties/1923164/arizona-1640-sf-industrial-office-space-for-lease-or-sale", "flyerUrl": "", "notes": "Built 1955. Vacant. 0.37 AC lot. AC, fenced yard. On-market 369 days."}, {"id": 25, "kamListing": true, "address1": "244 W Drachman St", "listingType": "For Sale", "address2": "Tucson, AZ 85705", "price": "$499,999", "type": "Office", "sqft": "4,065", "capRate": "", "opportunityZone": true, "images": ["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/244_w_drachman_st/1.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/244_w_drachman_st/2.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/244_w_drachman_st/3.jpg"], "imageUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/244_w_drachman_st/1.jpg", "crexiUrl": "https://www.crexi.com/properties/2147514", "flyerUrl": "https://elzeahxurnplnrwizjpo.supabase.co/storage/v1/object/public/knorwood_app_pdf/244_w_drachman_st.pdf", "notes": "Office space. Opportunity Zone."}, {"id": 26, "kamListing": true, "address1": "5500 Block E I-10 Frontage Rd", "listingType": "For Sale", "address2": "Tucson, AZ 85756", "price": "$1,990,857", "type": "Land", "sqft": "", "capRate": "", "opportunityZone": false, "images": ["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/5500_block_of_e_i_10/1.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/5500_block_of_e_i_10/2.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/5500_block_of_e_i_10/3.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/5500_block_of_e_i_10/4.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/5500_block_of_e_i_10/5.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/5500_block_of_e_i_10/6.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/5500_block_of_e_i_10/7.jpg"], "imageUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/5500_block_of_e_i_10/1.jpg", "crexiUrl": "https://www.crexi.com/properties/1032725", "flyerUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/5500_block_e_i10_frontage_rd.pdf", "notes": "Vacant Land. 8.31 Acres \u2014 Lots 1-11."}, {"id": 27, "kamListing": true, "address1": "7800 E Benson Highway", "listingType": "For Sale", "address2": "Tucson, AZ 85756", "price": "$1,320,000", "type": "Land", "sqft": "", "capRate": "", "opportunityZone": false, "images": ["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/7800_e_benson_highway/1.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/7800_e_benson_highway/2.jpg"], "imageUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/7800_e_benson_highway/1.jpg", "crexiUrl": "https://www.crexi.com/properties/1309023/arizona-7800-e-benson-highway", "flyerUrl": "", "notes": "Land. 5.5 acres."}, {"id": 29, "kamListing": true, "address1": "4915 E Speedway Blvd", "listingType": "For Sale", "address2": "Tucson, AZ 85712", "price": "Price Not Disclosed", "type": "Land", "sqft": "", "capRate": "", "opportunityZone": false, "images": ["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/4915_E_speedway_blvd/1.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/4915_E_speedway_blvd/2.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/4915_E_speedway_blvd/3.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/4915_E_speedway_blvd/4.jpg"], "imageUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/4915_E_speedway_blvd/1.jpg", "crexiUrl": "https://www.crexi.com/properties/2319059", "flyerUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/4915_e_speedway_blvd.pdf", "notes": "Land. 1.59 acres."}, {"id": 30, "kamListing": true, "address1": "3838 E Fort Lowell Rd", "listingType": "For Sale", "address2": "Tucson, AZ 85716", "price": "$679,000", "type": "Office", "sqft": "3,663", "capRate": "7.50%", "opportunityZone": false, "images": ["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3838_e_fort_lowell_rd/1.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3838_e_fort_lowell_rd/2.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3838_e_fort_lowell_rd/3.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3838_e_fort_lowell_rd/4.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3838_e_fort_lowell_rd/5.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3838_e_fort_lowell_rd/6.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3838_e_fort_lowell_rd/7.jpg"], "imageUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3838_e_fort_lowell_rd/1.jpg", "crexiUrl": "https://www.crexi.com/properties/2147516/arizona-3838-e-fort-lowell-rd", "flyerUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3838_e_fort_lowell_rd.pdf", "notes": "Office. 7.50% CAP rate."}, {"id": 31, "kamListing": true, "address1": "275 W Adams St", "listingType": "For Sale", "address2": "Tucson, AZ 85705", "price": "$165,000", "type": "Land", "sqft": "", "capRate": "", "opportunityZone": true, "images": ["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/275_w_adams_st/1.jpg"], "imageUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/275_w_adams_st/1.jpg", "crexiUrl": "https://www.crexi.com/properties/2147522", "flyerUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/275_w_adams_st.pdf", "notes": "Land. 0.164 acres. Opportunity Zone."}, {"id": 32, "kamListing": true, "address1": "3380 E Michigan St", "listingType": "For Sale", "address2": "Tucson, AZ 85714", "price": "$2,500,000", "type": "Land", "sqft": "", "capRate": "", "opportunityZone": false, "images": ["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3380_e_michigan_st/1.jpg"], "imageUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3380_e_michigan_st/1.jpg", "crexiUrl": "https://www.crexi.com/properties/2147542", "flyerUrl": "", "notes": "Land. 4.17 acres."}, {"id": 33, "kamListing": true, "address1": "3001 S Cottonwood Lane", "listingType": "For Sale", "address2": "Tucson, AZ 85713", "price": "$1,299,999", "type": "Land", "sqft": "", "capRate": "", "opportunityZone": false, "images": ["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3001_s_cottonwood_lane/1.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3001_s_cottonwood_lane/2.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3001_s_cottonwood_lane/3.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3001_s_cottonwood_lane/4.jpg"], "imageUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3001_s_cottonwood_lane/1.jpg", "crexiUrl": "https://www.crexi.com/properties/2188445/arizona-3001-s-cottonwood-lane", "flyerUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3001_s_cottonwood_lane.pdf", "notes": "Land. 10.28 acres."}, {"id": 34, "kamListing": true, "address1": "1702 W Anklam Rd, Suite 111", "listingType": "For Sale", "address2": "Tucson, AZ 85745", "price": "Price Not Disclosed", "type": "Office", "sqft": "1,192", "capRate": "", "opportunityZone": false, "images": ["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/1702_w_anklam_rd_suite_111/1.jpg"], "imageUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/1702_w_anklam_rd_suite_111/1.jpg", "crexiUrl": "https://www.crexi.com/properties/2466576/arizona-1702-w-anklam-rd-suite-111", "flyerUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/1702_w_anklam_rd_suite_111.pdf", "notes": "Office space."}, {"id": 35, "kamListing": true, "address1": "Benson Highway & I-10", "listingType": "For Sale", "address2": "Tucson, AZ 85713", "price": "Price Not Disclosed", "type": "Land", "sqft": "", "capRate": "", "opportunityZone": false, "images": ["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/benson_highway_i_10/1.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/benson_highway_i_10/2.jpg"], "imageUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/benson_highway_i_10/1.jpg", "crexiUrl": "https://www.crexi.com/properties/2530199/arizona-benson-highwayi-10", "flyerUrl": "", "notes": "Land. Benson Highway/I-10 corridor."}, {"id": 36, "kamListing": true, "address1": "NE Corner of Trekell & I-8", "listingType": "For Sale", "address2": "Casa Grande, AZ 85193", "price": "Price Not Disclosed", "type": "Land", "sqft": "", "capRate": "", "opportunityZone": false, "images": ["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/ne_corner_of_trekell_&_i_8/1.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/ne_corner_of_trekell_&_i_8/2.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/ne_corner_of_trekell_&_i_8/3.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/ne_corner_of_trekell_&_i_8/4.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/ne_corner_of_trekell_&_i_8/5.jpg"], "imageUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/ne_corner_of_trekell_&_i_8/1.jpg", "crexiUrl": "https://www.crexi.com/properties/2502540/arizona-ne-corner-of-trekell-i-8", "flyerUrl": "", "notes": "Land. 40.16 acres."}, {"id": 37, "kamListing": true, "address1": "601 W Simpson St & 630 W 18th St", "listingType": "For Sale", "address2": "Tucson, AZ 85745", "price": "Price Not Disclosed", "type": "Land", "sqft": "", "capRate": "", "opportunityZone": false, "images": ["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/601_w_simpson_st/1.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/601_w_simpson_st/2.jpg"], "imageUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/601_w_simpson_st/1.jpg", "crexiUrl": "https://www.crexi.com/properties/2569558/arizona-601-w-simpson-st-630-w-18th-st", "flyerUrl": "", "notes": "Land. 3.0 AC + 2.69 AC + 5.59 AC."}, {"id": 63, "kamListing": true, "address1": "Bambi Bar", "listingType": "For Sale", "address2": "Tucson, AZ", "price": "Price Not Disclosed", "type": "Special Purpose", "sqft": "", "capRate": "", "opportunityZone": false, "images": ["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/bambi_bar/1.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/bambi_bar/2.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/bambi_bar/3.jpg"], "imageUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/bambi_bar/1.jpg", "crexiUrl": "https://www.crexi.com/properties/1460498/arizona-bambi-bar", "flyerUrl": "", "notes": "Bambi Bar."}, {"id": 64, "kamListing": true, "address1": "3380 E Michigan St", "listingType": "For Sale", "address2": "Tucson, AZ 85714", "price": "Price Not Disclosed", "type": "Land", "sqft": "", "capRate": "", "opportunityZone": false, "images": ["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3380_e_michigan_st/1.jpg"], "imageUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3380_e_michigan_st/1.jpg", "crexiUrl": "https://www.crexi.com/properties/1923134", "flyerUrl": "", "notes": "Land. 4.17 acres."}, {"id": 65, "kamListing": true, "address1": "244 W Drachman St", "listingType": "For Sale", "address2": "Tucson, AZ 85705", "price": "Price Not Disclosed", "type": "Office", "sqft": "4,065", "capRate": "", "opportunityZone": true, "images": ["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/244_w_drachman_st/1.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/244_w_drachman_st/2.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/244_w_drachman_st/3.jpg"], "imageUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/244_w_drachman_st/1.jpg", "crexiUrl": "https://www.crexi.com/properties/1734921", "flyerUrl": "https://elzeahxurnplnrwizjpo.supabase.co/storage/v1/object/public/knorwood_app_pdf/244_w_drachman_st.pdf", "notes": "Office space. Opportunity Zone."}, {"id": 40, "kamListing": true, "address1": "6898-6910 N Camino Martin", "listingType": "For Lease", "address2": "Tucson, AZ 85741", "price": "$1.20/SF/MO", "type": "Industrial", "sqft": "", "capRate": "", "opportunityZone": false, "images": ["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/6898-6910_n_camino_martin/1.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/6898-6910_n_camino_martin/2.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/6898-6910_n_camino_martin/3.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/6898-6910_n_camino_martin/4.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/6898-6910_n_camino_martin/5.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/6898-6910_n_camino_martin/6.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/6898-6910_n_camino_martin/7.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/6898-6910_n_camino_martin/8.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/6898-6910_n_camino_martin/9.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/6898-6910_n_camino_martin/10.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/6898-6910_n_camino_martin/11.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/6898-6910_n_camino_martin/12.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/6898-6910_n_camino_martin/13.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/6898-6910_n_camino_martin/14.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/6898-6910_n_camino_martin/15.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/6898-6910_n_camino_martin/16.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/6898-6910_n_camino_martin/17.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/6898-6910_n_camino_martin/18.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/6898-6910_n_camino_martin/19.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/6898-6910_n_camino_martin/20.jpg"], "imageUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/6898-6910_n_camino_martin/1.jpg", "crexiUrl": "https://www.crexi.com/lease/properties/1048194/arizona-6898-6910-n-camino-martin", "flyerUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/6898_6910_n_camino_martin.pdf", "notes": "4 spaces available."}, {"id": 41, "kamListing": true, "address1": "Tucson Tech Park", "listingType": "For Lease", "address2": "Tucson, AZ 85719", "price": "Price Not Disclosed", "type": "Industrial", "sqft": "1,220", "capRate": "", "opportunityZone": false, "images": ["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/tucson_tech_park/1.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/tucson_tech_park/2.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/tucson_tech_park/3.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/tucson_tech_park/4.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/tucson_tech_park/5.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/tucson_tech_park/6.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/tucson_tech_park/7.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/tucson_tech_park/8.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/tucson_tech_park/9.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/tucson_tech_park/10.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/tucson_tech_park/11.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/tucson_tech_park/12.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/tucson_tech_park/13.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/tucson_tech_park/14.jpg"], "imageUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/tucson_tech_park/1.jpg", "crexiUrl": "https://www.crexi.com/lease/properties/1028487/arizona-tucson-tech-park", "flyerUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/tucson_tech_park_1665_e_18th_st.pdf", "notes": "1660 & 1662 E Winsett St. 4 spaces available."}, {"id": 42, "kamListing": true, "address1": "3690-3700 S Palo Verde Rd", "listingType": "For Lease", "address2": "Tucson, AZ 85713", "price": "$0.95/SF/MO", "type": "Industrial", "sqft": "9,438", "capRate": "", "opportunityZone": false, "images": ["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3690-3700_s_palo_verde_rd/1.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3690-3700_s_palo_verde_rd/2.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3690-3700_s_palo_verde_rd/3.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3690-3700_s_palo_verde_rd/4.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3690-3700_s_palo_verde_rd/5.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3690-3700_s_palo_verde_rd/6.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3690-3700_s_palo_verde_rd/7.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3690-3700_s_palo_verde_rd/8.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3690-3700_s_palo_verde_rd/9.jpg"], "imageUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3690-3700_s_palo_verde_rd/1.jpg", "crexiUrl": "https://www.crexi.com/lease/properties/1017172/arizona-3690-3700-s-palo-verde-road", "flyerUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3690_3700_s_palo_verde_rd.pdf", "notes": "1 space available."}, {"id": 43, "kamListing": true, "address1": "3778 E 43rd Place", "listingType": "For Lease", "address2": "Tucson, AZ 85713", "price": "$1.40/SF/MO", "type": "Industrial", "sqft": "6,525", "capRate": "", "opportunityZone": false, "images": ["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3778_e_43rd_place/1.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3778_e_43rd_place/2.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3778_e_43rd_place/3.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3778_e_43rd_place/4.jpg"], "imageUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3778_e_43rd_place/1.jpg", "crexiUrl": "https://www.crexi.com/lease/properties/1017161/arizona-3778-e-43rd-place", "flyerUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3778_e_43rd_place.pdf", "notes": "1 space available."}, {"id": 44, "kamListing": true, "address1": "Park/Ajo Commerce Center", "listingType": "For Lease", "address2": "Tucson, AZ 85713", "price": "$0.72/SF/MO", "type": "Industrial", "sqft": "10,000", "capRate": "", "opportunityZone": false, "images": ["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/park_ajo_commerce_center/1.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/park_ajo_commerce_center/2.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/park_ajo_commerce_center/3.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/park_ajo_commerce_center/4.jpg"], "imageUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/park_ajo_commerce_center/1.jpg", "crexiUrl": "https://www.crexi.com/lease/properties/1017106/arizona-parkajo-commerce-center", "flyerUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3770_s_park_ave.pdf", "notes": "3770 S Park Avenue. 1 space available."}, {"id": 45, "kamListing": true, "address1": "Old Vail Commerce Center", "listingType": "For Lease", "address2": "Tucson, AZ 85747", "price": "Price Not Disclosed", "type": "Industrial", "sqft": "55,800", "capRate": "", "opportunityZone": false, "images": ["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/old_vail_commerce_center/1.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/old_vail_commerce_center/2.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/old_vail_commerce_center/3.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/old_vail_commerce_center/4.jpg"], "imageUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/old_vail_commerce_center/1.jpg", "crexiUrl": "https://www.crexi.com/lease/properties/778766/arizona-old-vail-commerce-center", "flyerUrl": "", "notes": "8374 E Old Vail Rd. 8 spaces available."}, {"id": 46, "kamListing": true, "address1": "Ajo/Evans Business Park", "listingType": "For Lease", "address2": "Tucson, AZ 85713", "price": "$1.20/SF/MO", "type": "Industrial", "sqft": "811", "capRate": "", "opportunityZone": false, "images": ["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/ajo_evans_business_park/1.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/ajo_evans_business_park/2.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/ajo_evans_business_park/3.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/ajo_evans_business_park/4.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/ajo_evans_business_park/5.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/ajo_evans_business_park/6.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/ajo_evans_business_park/7.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/ajo_evans_business_park/8.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/ajo_evans_business_park/9.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/ajo_evans_business_park/10.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/ajo_evans_business_park/11.jpg"], "imageUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/ajo_evans_business_park/1.jpg", "crexiUrl": "https://www.crexi.com/lease/properties/633505/arizona-ajoevans-business-park", "flyerUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/ajo_evans_business_park.pdf", "notes": "1100 & 1200 E Ajo Way. 4 spaces available."}, {"id": 47, "kamListing": true, "address1": "3763 E 43rd Place", "listingType": "For Lease", "address2": "Tucson, AZ 85713", "price": "Price Not Disclosed", "type": "Industrial", "sqft": "", "capRate": "", "opportunityZone": false, "images": ["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3763_e_43rd_place/1.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3763_e_43rd_place/2.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3763_e_43rd_place/3.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3763_e_43rd_place/4.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3763_e_43rd_place/5.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3763_e_43rd_place/6.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3763_e_43rd_place/7.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3763_e_43rd_place/8.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3763_e_43rd_place/9.jpg"], "imageUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3763_e_43rd_place/1.jpg", "crexiUrl": "https://www.crexi.com/lease/properties/1143846/arizona-3763-e-43rd-place", "flyerUrl": "", "notes": "1 space available."}, {"id": 48, "kamListing": true, "address1": "3450 S Broadmoor Dr", "listingType": "For Lease", "address2": "Tucson, AZ 85713", "price": "$0.80/SF/MO", "type": "Industrial", "sqft": "5,150", "capRate": "", "opportunityZone": false, "images": ["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3450_s_broadmoor_dr/1.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3450_s_broadmoor_dr/2.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3450_s_broadmoor_dr/3.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3450_s_broadmoor_dr/4.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3450_s_broadmoor_dr/5.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3450_s_broadmoor_dr/6.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3450_s_broadmoor_dr/7.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3450_s_broadmoor_dr/8.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3450_s_broadmoor_dr/9.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3450_s_broadmoor_dr/10.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3450_s_broadmoor_dr/11.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3450_s_broadmoor_dr/12.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3450_s_broadmoor_dr/13.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3450_s_broadmoor_dr/14.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3450_s_broadmoor_dr/15.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3450_s_broadmoor_dr/16.jpg"], "imageUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3450_s_broadmoor_dr/1.jpg", "crexiUrl": "https://www.crexi.com/lease/properties/1017134/arizona-3450-s-broadmont-drive", "flyerUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3450_s_broadmoor_dr.pdf", "notes": "1 space available."}, {"id": 49, "kamListing": true, "address1": "2200 E Benson Highway", "listingType": "For Lease", "address2": "Tucson, AZ 85714", "price": "Price Not Disclosed", "type": "Industrial", "sqft": "5,760", "capRate": "", "opportunityZone": false, "images": ["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/2200%20E%20Benson%20Highway/1.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/2200%20E%20Benson%20Highway/2.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/2200%20E%20Benson%20Highway/3.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/2200%20E%20Benson%20Highway/4.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/2200%20E%20Benson%20Highway/5.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/2200%20E%20Benson%20Highway/6.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/2200%20E%20Benson%20Highway/7.jpg"], "imageUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/2200%20E%20Benson%20Highway/1.jpg", "crexiUrl": "https://www.crexi.com/lease/properties/1161488/arizona-2200-e-benson-highway", "flyerUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/2200_e_benson_highway.pdf", "notes": "Single tenant."}, {"id": 50, "kamListing": true, "address1": "149 W Sahuaro St", "listingType": "For Lease", "address2": "Tucson, AZ 85705", "price": "$1.15/SF/MO", "type": "Industrial", "sqft": "5,100", "capRate": "", "opportunityZone": false, "images": ["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/149%20W%20Sahuaro%20St/1.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/149%20W%20Sahuaro%20St/2.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/149%20W%20Sahuaro%20St/3.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/149%20W%20Sahuaro%20St/4.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/149%20W%20Sahuaro%20St/5.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/149%20W%20Sahuaro%20St/6.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/149%20W%20Sahuaro%20St/7.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/149%20W%20Sahuaro%20St/8.jpg"], "imageUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/149%20W%20Sahuaro%20St/1.jpg", "crexiUrl": "https://www.crexi.com/lease/properties/1153666/arizona-149-w-sahuaro-st", "flyerUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/149_w_sahuaro_st.pdf", "notes": "1 space available."}, {"id": 51, "kamListing": true, "address1": "340 N Commerce Park Loop", "listingType": "For Lease", "address2": "Tucson, AZ 85745", "price": "Price Not Disclosed", "type": "Office", "sqft": "9,800", "capRate": "", "opportunityZone": false, "images": ["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/340_n_commerce_park_loop/1.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/340_n_commerce_park_loop/2.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/340_n_commerce_park_loop/3.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/340_n_commerce_park_loop/4.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/340_n_commerce_park_loop/5.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/340_n_commerce_park_loop/6.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/340_n_commerce_park_loop/7.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/340_n_commerce_park_loop/8.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/340_n_commerce_park_loop/9.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/340_n_commerce_park_loop/10.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/340_n_commerce_park_loop/11.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/340_n_commerce_park_loop/12.jpg"], "imageUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/340_n_commerce_park_loop/1.jpg", "crexiUrl": "https://www.crexi.com/lease/properties/1138868/arizona-340-n-commerce-park-loop", "flyerUrl": "", "notes": "1 space available."}, {"id": 52, "kamListing": true, "address1": "4915 E Speedway Blvd", "listingType": "For Lease", "address2": "Tucson, AZ 85712", "price": "Price Not Disclosed", "type": "Land", "sqft": "69,260", "capRate": "", "opportunityZone": false, "images": ["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/4915_E_speedway_blvd/1.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/4915_E_speedway_blvd/2.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/4915_E_speedway_blvd/3.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/4915_E_speedway_blvd/4.jpg"], "imageUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/4915_E_speedway_blvd/1.jpg", "crexiUrl": "https://www.crexi.com/lease/properties/1086123/arizona-4915-e-speedway-blvd", "flyerUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/4915_e_speedway_blvd.pdf", "notes": "Land. 1.59 acres."}, {"id": 53, "kamListing": true, "address1": "2840 N Country Club Rd", "listingType": "For Lease", "address2": "Tucson, AZ 85716", "price": "$18/SF/YR", "type": "Office", "sqft": "1,056", "capRate": "", "opportunityZone": false, "images": ["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/2840_n_country_club_rd/1.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/2840_n_country_club_rd/2.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/2840_n_country_club_rd/3.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/2840_n_country_club_rd/4.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/2840_n_country_club_rd/5.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/2840_n_country_club_rd/6.jpg"], "imageUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/2840_n_country_club_rd/1.jpg", "crexiUrl": "https://www.crexi.com/lease/properties/1029385/arizona-2840-n-country-club-rd", "flyerUrl": "", "notes": "1 space available."}, {"id": 54, "kamListing": true, "address1": "5050 & 5056 E Speedway Blvd", "listingType": "For Lease", "address2": "Tucson, AZ 85712", "price": "Price Not Disclosed", "type": "Land", "sqft": "69,260", "capRate": "", "opportunityZone": false, "images": ["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/5050_%26_5056_e_speedway_blvd/1.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/5050_%26_5056_e_speedway_blvd/2.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/5050_%26_5056_e_speedway_blvd/3.jpg"], "imageUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/5050_%26_5056_e_speedway_blvd/1.jpg", "crexiUrl": "https://www.crexi.com/lease/properties/1020823/arizona-5050-5056-e-speedway-blvd", "flyerUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/5050_5056_e_speedway_blvd.pdf", "notes": "Single tenant. 30,056 SF."}, {"id": 55, "kamListing": true, "address1": "1636 N 15th Ave", "listingType": "For Lease", "address2": "Tucson, AZ 85705", "price": "Price Not Disclosed", "type": "Land", "sqft": "69,260", "capRate": "", "opportunityZone": false, "images": ["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/1636_n_15th_ave/1.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/1636_n_15th_ave/2.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/1636_n_15th_ave/3.jpg"], "imageUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/1636_n_15th_ave/1.jpg", "crexiUrl": "https://www.crexi.com/lease/properties/1017252/arizona-1636-n-15th-ave", "flyerUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/1636_n_15th_ave.pdf", "notes": "Land. 143,312 SF."}, {"id": 56, "kamListing": true, "address1": "244 W Drachman St", "listingType": "For Lease", "address2": "Tucson, AZ 85705", "price": "Price Not Disclosed", "type": "Office", "sqft": "4,065", "capRate": "", "opportunityZone": false, "images": ["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/244_w_drachman_st/1.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/244_w_drachman_st/2.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/244_w_drachman_st/3.jpg"], "imageUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/244_w_drachman_st/1.jpg", "crexiUrl": "https://www.crexi.com/lease/properties/1017247/arizona-244-w-drachman-st", "flyerUrl": "https://elzeahxurnplnrwizjpo.supabase.co/storage/v1/object/public/knorwood_app_pdf/244_w_drachman_st.pdf", "notes": "1 space available."}, {"id": 57, "kamListing": true, "address1": "3441 E Michigan St", "listingType": "For Lease", "address2": "Tucson, AZ 85714", "price": "Price Not Disclosed", "type": "Industrial", "sqft": "5,000", "capRate": "", "opportunityZone": false, "images": ["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3441_e_michigan_st/1.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3441_e_michigan_st/2.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3441_e_michigan_st/3.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3441_e_michigan_st/4.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3441_e_michigan_st/5.jpg"], "imageUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/3441_e_michigan_st/1.jpg", "crexiUrl": "https://www.crexi.com/lease/properties/1017234/arizona-3441-e-michigan-st", "flyerUrl": "", "notes": "1 space available."}, {"id": 58, "kamListing": true, "address1": "56 W Congress Street", "listingType": "For Lease", "address2": "Tucson, AZ 85701", "price": "$20.25/SF/YR", "type": "Office", "sqft": "2,500", "capRate": "", "opportunityZone": false, "images": ["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/56_w_congress_street/1.png", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/56_w_congress_street/2.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/56_w_congress_street/3.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/56_w_congress_street/4.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/56_w_congress_street/5.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/56_w_congress_street/6.jpg"], "imageUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/56_w_congress_street/1.png", "crexiUrl": "https://www.crexi.com/lease/properties/1017217/arizona-56-w-congress-street", "flyerUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/56_w_congress_st.pdf", "notes": "1 space available."}, {"id": 59, "kamListing": true, "address1": "4420 E Speedway", "listingType": "For Lease", "address2": "Tucson, AZ 85712", "price": "$15/SF/YR", "type": "Office", "sqft": "1,306", "capRate": "", "opportunityZone": false, "images": ["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/4420_e_speedway/1.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/4420_e_speedway/2.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/4420_e_speedway/3.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/4420_e_speedway/4.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/4420_e_speedway/5.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/4420_e_speedway/6.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/4420_e_speedway/7.jpg"], "imageUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/4420_e_speedway/1.jpg", "crexiUrl": "https://www.crexi.com/lease/properties/1017205/arizona-4420-e-speedway", "flyerUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/4420_e_speedway_blvd.pdf", "notes": "1 space available."}, {"id": 60, "kamListing": true, "address1": "Lisa Frank Warehouse", "listingType": "For Lease", "address2": "Tucson, AZ 85756", "price": "Price Not Disclosed", "type": "Industrial", "sqft": "20,000", "capRate": "", "opportunityZone": false, "images": ["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/lisa_frank_warehouse/1.jpg"], "imageUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/lisa_frank_warehouse/1.jpg", "crexiUrl": "https://www.crexi.com/lease/properties/1017104/arizona-lisa-frank-warehouse", "flyerUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/6760_s_lisa_frank_ave.pdf", "notes": "6760 S Lisa Frank Avenue. 1 space available."}, {"id": 61, "kamListing": true, "address1": "Sherwood Professional Terrace", "listingType": "For Lease", "address2": "Tucson, AZ 85710", "price": "Price Not Disclosed", "type": "Office", "sqft": "564", "capRate": "", "opportunityZone": false, "images": ["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/sherwood_professional_terrace/1.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/sherwood_professional_terrace/2.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/sherwood_professional_terrace/3.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/sherwood_professional_terrace/4.jpg"], "imageUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/sherwood_professional_terrace/1.jpg", "crexiUrl": "https://www.crexi.com/lease/properties/802249/arizona-sherwood-professional-terrace", "flyerUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/8230_e_broadway_blvd_suite_w6.pdf", "notes": "8230 E Broadway Blvd Suite W6."}, {"id": 62, "kamListing": true, "address1": "The Marquez Professional Campus", "listingType": "For Lease", "address2": "Tucson, AZ 85719", "price": "$1.83/SF/MO", "type": "Office", "sqft": "69,260", "capRate": "", "opportunityZone": false, "images": ["https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/marquez_professional_campus/1.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/marquez_professional_campus/2.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/marquez_professional_campus/3.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/marquez_professional_campus/4.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/marquez_professional_campus/5.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/marquez_professional_campus/6.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/marquez_professional_campus/7.jpg", "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/marquez_professional_campus/8.jpg"], "imageUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/marquez_professional_campus/1.jpg", "crexiUrl": "https://www.crexi.com/lease/properties/782565/arizona-2713-n-campbell-avenue", "flyerUrl": "https://mlgmigguhljsiopctkkj.supabase.co/storage/v1/object/public/knorwood_cre/2713_2719_n_campbell_ave.pdf", "notes": "2713-2719 N Campbell Avenue. 4 spaces available."}, {"id": 69, "kamListing": true, "address1": "3410 N 1st Ave", "listingType": "For Sale", "address2": "Tucson, AZ 85719", "price": "$475,000", "type": "Special Purpose / Retail", "sqft": "4,620", "capRate": "", "opportunityZone": false, "images": ["https://jmjrwkmbwydspeoftlly.supabase.co/storage/v1/object/public/knorwood-cre-app/3410_n_1st_ave/1.jpg", "https://jmjrwkmbwydspeoftlly.supabase.co/storage/v1/object/public/knorwood-cre-app/3410_n_1st_ave/2.jpg", "https://jmjrwkmbwydspeoftlly.supabase.co/storage/v1/object/public/knorwood-cre-app/3410_n_1st_ave/3.jpg", "https://jmjrwkmbwydspeoftlly.supabase.co/storage/v1/object/public/knorwood-cre-app/3410_n_1st_ave/4.jpg", "https://jmjrwkmbwydspeoftlly.supabase.co/storage/v1/object/public/knorwood-cre-app/3410_n_1st_ave/5.jpg", "https://jmjrwkmbwydspeoftlly.supabase.co/storage/v1/object/public/knorwood-cre-app/3410_n_1st_ave/6.jpg", "https://jmjrwkmbwydspeoftlly.supabase.co/storage/v1/object/public/knorwood-cre-app/3410_n_1st_ave/7.jpg", "https://jmjrwkmbwydspeoftlly.supabase.co/storage/v1/object/public/knorwood-cre-app/3410_n_1st_ave/8.jpg", "https://jmjrwkmbwydspeoftlly.supabase.co/storage/v1/object/public/knorwood-cre-app/3410_n_1st_ave/9.jpg", "https://jmjrwkmbwydspeoftlly.supabase.co/storage/v1/object/public/knorwood-cre-app/3410_n_1st_ave/10.jpg", "https://jmjrwkmbwydspeoftlly.supabase.co/storage/v1/object/public/knorwood-cre-app/3410_n_1st_ave/11.jpg", "https://jmjrwkmbwydspeoftlly.supabase.co/storage/v1/object/public/knorwood-cre-app/3410_n_1st_ave/12.jpg", "https://jmjrwkmbwydspeoftlly.supabase.co/storage/v1/object/public/knorwood-cre-app/3410_n_1st_ave/13.jpg", "https://jmjrwkmbwydspeoftlly.supabase.co/storage/v1/object/public/knorwood-cre-app/3410_n_1st_ave/14.jpg", "https://jmjrwkmbwydspeoftlly.supabase.co/storage/v1/object/public/knorwood-cre-app/3410_n_1st_ave/15.jpg", "https://jmjrwkmbwydspeoftlly.supabase.co/storage/v1/object/public/knorwood-cre-app/3410_n_1st_ave/16.jpg"], "imageUrl": "https://jmjrwkmbwydspeoftlly.supabase.co/storage/v1/object/public/knorwood-cre-app/3410_n_1st_ave/1.jpg", "crexiUrl": "https://www.crexi.com/properties/1993123/arizona-blue-waters-car-wash", "flyerUrl": "https://jmjrwkmbwydspeoftlly.supabase.co/storage/v1/object/public/knorwood-cre-app/3410_n_1st_ave.pdf", "notes": "Car wash. 4,620 SF building on 0.8 acres. C-2 zoning. Co-listed with Aaron LaPrise."}];
+
+// ---- STATE ----
+let currentUser = null;
+let currentProfile = null;
+let savedIds = new Set();
+let activeTab = 'all';
+let pendingInterestId = null;
+let cardImgIdx = {};
+
+// ---- INIT ----
+async function init() {
+  const { data: { session } } = await db.auth.getSession();
+  if (session) {
+    currentUser = session.user;
+    await loadAfterAuth();
+  } else {
+    showScreen('auth');
+  }
+
+  db.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session) {
+      currentUser = session.user;
+      await loadAfterAuth();
+    } else if (event === 'SIGNED_OUT') {
+      currentUser = null;
+      currentProfile = null;
+      savedIds = new Set();
+      showScreen('auth');
+    }
+  });
+}
+
+async function loadAfterAuth() {
+  const profile = await fetchProfile();
+  if (!profile) {
+    showScreen('profile');
+  } else {
+    currentProfile = profile;
+    await loadSaved();
+    document.getElementById('user-badge').textContent = profile.name || currentUser.email;
+    showScreen('app');
+    renderGrid();
+  }
+}
+
+function showScreen(name) {
+  document.getElementById('auth-screen').style.display = name === 'auth' ? 'flex' : 'none';
+  const ps = document.getElementById('profile-screen');
+  ps.style.display = name === 'profile' ? 'flex' : 'none';
+  ps.classList.toggle('visible', name === 'profile');
+  const as = document.getElementById('app-screen');
+  as.style.display = name === 'app' ? 'block' : 'none';
+  as.classList.toggle('visible', name === 'app');
+}
+
+// ---- AUTH ----
+function switchAuthTab(tab) {
+  document.getElementById('signin-form').style.display = tab === 'signin' ? 'block' : 'none';
+  document.getElementById('signup-form').style.display = tab === 'signup' ? 'block' : 'none';
+  document.getElementById('tab-signin').classList.toggle('active', tab === 'signin');
+  document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
+}
+
+async function doSignIn() {
+  const email = document.getElementById('si-email').value.trim();
+  const password = document.getElementById('si-password').value;
+  const errEl = document.getElementById('si-err');
+  const btn = document.getElementById('si-btn');
+  errEl.textContent = '';
+  if (!email || !password) { errEl.textContent = 'Please fill in all fields.'; return; }
+  btn.disabled = true; btn.textContent = 'Signing in…';
+  const { error } = await db.auth.signInWithPassword({ email, password });
+  btn.disabled = false; btn.textContent = 'Sign In';
+  if (error) errEl.textContent = error.message;
+}
+
+async function doSignUp() {
+  const email = document.getElementById('su-email').value.trim();
+  const pw = document.getElementById('su-password').value;
+  const pw2 = document.getElementById('su-password2').value;
+  const errEl = document.getElementById('su-err');
+  const btn = document.getElementById('su-btn');
+  errEl.textContent = '';
+  if (!email || !pw) { errEl.textContent = 'Please fill in all fields.'; return; }
+  if (pw !== pw2) { errEl.textContent = 'Passwords do not match.'; return; }
+  if (pw.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; return; }
+  btn.disabled = true; btn.textContent = 'Creating account…';
+  const { error } = await db.auth.signUp({ email, password: pw });
+  btn.disabled = false; btn.textContent = 'Create Account & Continue';
+  if (error) { errEl.textContent = error.message; return; }
+}
+
+async function doLogout() {
+  await db.auth.signOut();
+}
+
+// ---- PROFILE ----
+async function fetchProfile() {
+  const { data } = await db.from('client_profiles').select('*').eq('id', currentUser.id).single();
+  return data;
+}
+
+async function saveProfile() {
+  const name = document.getElementById('p-name').value.trim();
+  const errEl = document.getElementById('profile-err');
+  const btn = document.getElementById('profile-btn');
+  errEl.textContent = '';
+  if (!name) { errEl.textContent = 'Please enter your name.'; return; }
+
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  const { error: profErr } = await db.from('client_profiles').upsert({
+    id: currentUser.id,
+    name,
+    phone: document.getElementById('p-phone').value.trim(),
+    company: document.getElementById('p-company').value.trim(),
+    status: 'active'
+  });
+
+  if (profErr) { errEl.textContent = profErr.message; btn.disabled = false; btn.textContent = 'Save & Browse Properties →'; return; }
+
+  const propType = document.getElementById('p-proptype').value;
+  const listType = document.getElementById('p-listtype').value;
+  const priceMin = document.getElementById('p-pricemin').value.trim();
+  const priceMax = document.getElementById('p-pricemax').value.trim();
+  const sizeMin = document.getElementById('p-sizemin').value.trim();
+
+  if (propType || listType || priceMin || priceMax || sizeMin) {
+    await db.from('client_search_params').insert({
+      client_id: currentUser.id,
+      property_type: propType || null,
+      listing_type: listType || null,
+      price_min: priceMin || null,
+      price_max: priceMax || null,
+      size_min: sizeMin || null
+    });
+  }
+
+  btn.disabled = false; btn.textContent = 'Save & Browse Properties →';
+  currentProfile = { id: currentUser.id, name };
+  document.getElementById('user-badge').textContent = name;
+  await loadSaved();
+  showScreen('app');
+  renderGrid();
+}
+
+// ---- SAVED ----
+async function loadSaved() {
+  const { data } = await db.from('saved_properties').select('listing_id').eq('user_id', currentUser.id);
+  savedIds = new Set((data || []).map(r => r.listing_id));
+}
+
+async function toggleSave(listingId, address) {
+  const btn = document.getElementById('save-btn-' + listingId);
+  if (savedIds.has(listingId)) {
+    savedIds.delete(listingId);
+    await db.from('saved_properties').delete().eq('user_id', currentUser.id).eq('listing_id', listingId);
+    if (btn) { btn.classList.remove('saved'); btn.innerHTML = '♡ Save'; }
+    if (activeTab === 'saved') renderGrid();
+    showToast('Removed from saved.', 'success');
+  } else {
+    savedIds.add(listingId);
+    await db.from('saved_properties').insert({ user_id: currentUser.id, listing_id: listingId, address });
+    if (btn) { btn.classList.add('saved'); btn.innerHTML = '♥ Saved'; }
+    showToast('Saved to your list!', 'success');
+  }
+}
+
+// ---- INTERESTS ----
+function openInterestModal(listingId, address) {
+  pendingInterestId = listingId;
+  document.getElementById('modal-prop-name').textContent = address;
+  document.getElementById('interest-modal').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('interest-modal').classList.remove('open');
+  pendingInterestId = null;
+}
+async function confirmInterest() {
+  if (!pendingInterestId) return;
+  const btn = document.getElementById('modal-confirm-btn');
+  btn.disabled = true; btn.textContent = 'Sending…';
+  const listing = LISTINGS.find(p => p.id === pendingInterestId);
+  await db.from('client_interests').insert({
+    user_id: currentUser.id,
+    client_name: currentProfile?.name || '',
+    client_email: currentUser.email,
+    listing_id: pendingInterestId,
+    address: listing?.address1 || '',
+    price: listing?.price || ''
+  });
+  btn.disabled = false; btn.textContent = '♡ I Want This';
+  closeModal();
+  showToast("Kam has been notified — he'll be in touch soon!", "success");
+}
+
+// ---- TABS ----
+function switchTab(tab) {
+  activeTab = tab;
+  document.getElementById('tab-all').classList.toggle('active', tab === 'all');
+  document.getElementById('tab-saved').classList.toggle('active', tab === 'saved');
+  renderGrid();
+}
+
+// ---- GRID ----
+function renderGrid() {
+  const grid = document.getElementById('prop-grid');
+  const meta = document.getElementById('results-meta');
+  let listings = activeTab === 'saved' ? LISTINGS.filter(p => savedIds.has(p.id)) : LISTINGS;
+
+  if (listings.length === 0) {
+    meta.innerHTML = '';
+    grid.innerHTML = activeTab === 'saved'
+      ? '<div class="empty"><div class="empty-icon">♡</div><h3>No saved properties yet</h3><p>Browse listings and tap Save on the ones you like.</p></div>'
+      : '<div class="empty"><div class="empty-icon">🏢</div><h3>No listings found</h3></div>';
+    return;
+  }
+
+  const label = activeTab === 'saved'
+    ? 'saved propert' + (listings.length === 1 ? 'y' : 'ies')
+    : 'available propert' + (listings.length === 1 ? 'y' : 'ies');
+  meta.innerHTML = '<span>' + listings.length + '</span> ' + label;
+
+  grid.innerHTML = listings.map(p => buildCard(p)).join('');
+}
+
+function buildCard(p) {
+  const isSaved = savedIds.has(p.id);
+  const imgs = (p.images && p.images.length) ? p.images : (p.imageUrl ? [p.imageUrl] : []);
+  const idx = cardImgIdx[p.id] || 0;
+  const imgSrc = imgs.length ? imgs[idx] : null;
+  const badgeClass = p.listingType === 'For Sale' ? 'badge-sale' : p.listingType === 'For Lease' ? 'badge-lease' : 'badge-either';
+  const priceDisplay = p.price || 'Price Not Disclosed';
+  const isBig = priceDisplay.length > 14;
+
+  // Image section — using data-id on container, no inline onerror string injection
+  let imgHtml;
+  if (imgSrc) {
+    imgHtml = '<img src="' + imgSrc + '" alt="" loading="lazy" data-fallback="1">';
+  } else {
+    imgHtml = '<div class="card-img-placeholder">🏢</div>';
+  }
+
+  const navHtml = imgs.length > 1
+    ? '<button class="img-nav prev" data-id="' + p.id + '" data-dir="-1">‹</button>'
+      + '<button class="img-nav next" data-id="' + p.id + '" data-dir="1">›</button>'
+      + '<div class="img-counter">' + (idx + 1) + '/' + imgs.length + '</div>'
+    : '';
+
+  // Meta row
+  const metaParts = [];
+  if (p.type) metaParts.push(p.type);
+  if (p.sqft) metaParts.push(p.sqft + ' SF');
+  if (p.capRate) metaParts.push(p.capRate + ' CAP');
+  const metaHtml = metaParts.map((m, i) => i === 0 ? m : '<span class="meta-dot"></span>' + m).join(' ');
+
+  // Links
+  const linkHtml = [
+    p.crexiUrl ? '<a href="' + p.crexiUrl + '" target="_blank" rel="noopener" class="link-pill">View on Crexi ↗</a>' : '',
+    p.flyerUrl ? '<a href="' + p.flyerUrl + '" target="_blank" rel="noopener" class="link-pill">📄 Flyer</a>' : ''
+  ].filter(Boolean).join('');
+
+  return '<div class="card" data-id="' + p.id + '">'
+    + '<div class="card-img" id="cardimg-' + p.id + '">' + imgHtml + navHtml + '</div>'
+    + '<div class="card-body">'
+    + '<span class="listing-type-badge ' + badgeClass + '">' + (p.listingType || '') + '</span>'
+    + '<div class="card-price' + (isBig ? ' big' : '') + '">' + priceDisplay + '</div>'
+    + '<div class="card-address">' + p.address1 + '</div>'
+    + '<div class="card-city">' + (p.address2 || '') + '</div>'
+    + (metaHtml ? '<div class="card-meta">' + metaHtml + '</div>' : '')
+    + '<div class="card-actions">'
+    + '<button class="btn-save' + (isSaved ? ' saved' : '') + '" id="save-btn-' + p.id + '" data-action="save" data-id="' + p.id + '">'
+    + (isSaved ? '♥ Saved' : '♡ Save')
+    + '</button>'
+    + '<button class="btn-want" data-action="want" data-id="' + p.id + '">♡ I Want This</button>'
+    + '</div>'
+    + (linkHtml ? '<div class="card-links">' + linkHtml + '</div>' : '')
+    + '</div></div>';
+}
+
+// Event delegation — one listener handles all card buttons
+document.getElementById('prop-grid').addEventListener('click', function(e) {
+  // Image navigation
+  const navBtn = e.target.closest('.img-nav');
+  if (navBtn) {
+    e.stopPropagation();
+    const id = parseInt(navBtn.dataset.id);
+    const dir = parseInt(navBtn.dataset.dir);
+    imgNav(id, dir);
+    return;
+  }
+  // Save button
+  const saveBtn = e.target.closest('[data-action="save"]');
+  if (saveBtn) {
+    const id = parseInt(saveBtn.dataset.id);
+    const p = LISTINGS.find(l => l.id === id);
+    if (p) toggleSave(id, p.address1);
+    return;
+  }
+  // I Want This
+  const wantBtn = e.target.closest('[data-action="want"]');
+  if (wantBtn) {
+    const id = parseInt(wantBtn.dataset.id);
+    const p = LISTINGS.find(l => l.id === id);
+    if (p) openInterestModal(id, p.address1 + (p.address2 ? ' — ' + p.address2 : ''));
+    return;
+  }
+  // Image fallback
+  const img = e.target.closest('img[data-fallback]');
+  if (img) {
+    img.style.display = 'none';
+    const placeholder = document.createElement('div');
+    placeholder.className = 'card-img-placeholder';
+    placeholder.textContent = '🏢';
+    img.parentElement.insertBefore(placeholder, img);
+  }
+});
+
+function imgNav(listingId, dir) {
+  const p = LISTINGS.find(l => l.id === listingId);
+  if (!p) return;
+  const imgs = (p.images && p.images.length) ? p.images : (p.imageUrl ? [p.imageUrl] : []);
+  if (!imgs.length) return;
+  let idx = ((cardImgIdx[listingId] || 0) + dir + imgs.length) % imgs.length;
+  cardImgIdx[listingId] = idx;
+  const container = document.getElementById('cardimg-' + listingId);
+  if (!container) return;
+  const img = container.querySelector('img');
+  if (img) img.src = imgs[idx];
+  const counter = container.querySelector('.img-counter');
+  if (counter) counter.textContent = (idx + 1) + '/' + imgs.length;
+}
+
+// ---- TOAST ----
+let toastTimer;
+function showToast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type + ' show';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ---- KEYBOARD / CLOSE ----
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+document.getElementById('interest-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+
+// ---- START ----
+init();
+</script>
+</body>
+</html>
