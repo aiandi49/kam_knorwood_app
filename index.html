@@ -657,6 +657,7 @@
       padding: 22px 26px 18px;
       border-bottom: 1px solid var(--border-md);
       background: var(--cream); flex-shrink: 0;
+      position: sticky; top: 0; z-index: 10;
     }
     .drawer-title {
       font-family: 'Cormorant Garamond', serif;
@@ -676,6 +677,7 @@
       display: flex; gap: 0;
       border-bottom: 1px solid var(--border-md);
       flex-shrink: 0; background: var(--white);
+      position: sticky; top: 72px; z-index: 10;
     }
     .drawer-tab {
       padding: 11px 22px; font-size: 0.8rem; font-weight: 500;
@@ -694,6 +696,7 @@
       font-family: 'DM Sans', sans-serif; font-size: 0.85rem;
       color: var(--ink); background: var(--cream);
       outline: none; margin-bottom: 16px;
+      position: sticky; top: 0; z-index: 5;
     }
     .client-search-bar:focus { border-color: var(--gold); }
 
@@ -1397,7 +1400,7 @@ function renderListings() {
 
     const flyerIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`;
     const flyerBtn = p.flyerUrl
-      ? `<a href="${p.flyerUrl}" target="_blank" rel="noopener" class="btn-flyer">${flyerIcon} View Flyer</a>`
+      ? `<button onclick="openFlyerPopup('${p.flyerUrl}')" class="btn-flyer">${flyerIcon} View Flyer</button>`
       : `<span class="btn-flyer placeholder">${flyerIcon} Flyer Coming</span>`;
 
 
@@ -2332,6 +2335,16 @@ renderListings();
   }
   renderListings();
 })();
+
+function openFlyerPopup(url) {
+  const w = Math.min(1100, screen.availWidth * 0.85);
+  const h = Math.min(900, screen.availHeight * 0.9);
+  const left = Math.round((screen.availWidth - w) / 2);
+  const top = Math.round((screen.availHeight - h) / 2);
+  window.open(url, 'FlyerPopup',
+    `width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=yes,toolbar=no,menubar=no,location=no,status=no`
+  );
+}
 </script>
 </body>
 </html>
