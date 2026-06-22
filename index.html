@@ -638,13 +638,13 @@
     /* ── CLIENT PANEL (slide-in drawer) ───────────────────── */
     .client-overlay {
       display: none; position: fixed; inset: 0;
-      background: rgba(10,9,8,0.45); z-index: 800;
+      background: rgba(10,9,8,0.45); z-index: 800; top: 110px !important;
       backdrop-filter: blur(2px);
     }
     .client-overlay.open { display: block; }
     .client-drawer {
-      position: fixed; top: 0; right: -680px; width: 660px; max-width: 98vw;
-      height: 100vh; background: var(--white);
+      position: fixed; top: 110px; right: -680px; width: 660px; max-width: 98vw;
+      height: calc(100vh - 110px); background: var(--white);
       box-shadow: -8px 0 48px rgba(28,26,23,0.18);
       z-index: 801; display: flex; flex-direction: column;
       transition: right 0.32s cubic-bezier(0.4,0,0.2,1);
