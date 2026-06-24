@@ -216,6 +216,80 @@ body{background:var(--cream);color:var(--ink);font-family:'DM Sans',sans-serif;m
     }
     .pf-tab:hover { border-color: var(--gold); color: var(--gold); }
     .pf-tab.active { background: var(--ink); color: var(--white); border-color: var(--ink); }
+    /* ── AI SEARCH BAR ── */
+    .ai-search-wrap { margin-bottom: 18px; }
+    .ai-search-bar {
+      display: flex; align-items: center;
+      background: var(--white);
+      border: 1.5px solid var(--gold);
+      border-radius: 100px;
+      padding: 6px 6px 6px 16px;
+      gap: 10px;
+      box-shadow: 0 2px 12px rgba(184,150,62,0.1);
+      transition: box-shadow 0.2s;
+    }
+    .ai-search-bar:focus-within { box-shadow: 0 4px 20px rgba(184,150,62,0.2); }
+    .ai-search-orb {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold) 0%, #D4AC58 100%);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; cursor: pointer;
+      box-shadow: 0 0 0 0 rgba(184,150,62,0.5);
+      animation: aiOrbPulse 2.8s ease-in-out infinite;
+      transition: transform 0.15s;
+    }
+    .ai-search-orb:hover { transform: scale(1.1); }
+    .ai-search-orb svg { width: 16px; height: 16px; stroke: var(--white); }
+    @keyframes aiOrbPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(184,150,62,0.45); }
+      50%       { box-shadow: 0 0 0 8px rgba(184,150,62,0); }
+    }
+    .ai-search-orb.listening { animation: aiOrbListen 0.7s ease-in-out infinite alternate; }
+    @keyframes aiOrbListen {
+      0%   { box-shadow: 0 0 0 0 rgba(184,150,62,0.7); transform: scale(1); }
+      100% { box-shadow: 0 0 0 10px rgba(184,150,62,0); transform: scale(1.06); }
+    }
+    .ai-search-input {
+      flex: 1; border: none; outline: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem; color: var(--ink);
+      background: transparent;
+    }
+    .ai-search-input::placeholder { color: var(--ink-mute); }
+    .ai-search-btn {
+      padding: 8px 20px; border-radius: 100px;
+      background: var(--ink); color: var(--white);
+      border: none; font-family: 'DM Sans', sans-serif;
+      font-size: 0.8rem; font-weight: 600;
+      cursor: pointer; flex-shrink: 0;
+      display: flex; align-items: center; gap: 6px;
+      transition: background 0.18s;
+    }
+    .ai-search-btn:hover { background: var(--ink-mid); }
+    .ai-search-btn svg { width: 13px; height: 13px; stroke: var(--white); }
+    .ai-search-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; padding: 0 4px; }
+    .ai-chip-label { font-size: 0.75rem; color: var(--ink-mute); align-self: center; }
+    .ai-chip {
+      font-size: 0.74rem; color: var(--gold);
+      cursor: pointer; border: none; background: none; padding: 0;
+      font-family: 'DM Sans', sans-serif; transition: opacity 0.15s;
+    }
+    .ai-chip:hover { opacity: 0.7; }
+    .ai-active-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; padding: 0 4px; }
+    .ai-active-chip {
+      background: rgba(184,150,62,0.12); color: var(--gold);
+      border: 1px solid rgba(184,150,62,0.3);
+      padding: 3px 10px; border-radius: 20px; font-size: 0.72rem;
+    }
+    .ai-clear-btn {
+      font-size: 0.72rem; color: var(--ink-mute);
+      background: none; border: 1px solid var(--border-md);
+      border-radius: 20px; padding: 3px 10px;
+      cursor: pointer; font-family: 'DM Sans', sans-serif; transition: color 0.15s;
+    }
+    .ai-clear-btn:hover { color: var(--ink); }
+    elevenlabs-convai { position: fixed; bottom: -9999px; right: -9999px; opacity: 0; pointer-events: none; }
+
 </style>
 </head>
 <body>
@@ -320,6 +394,40 @@ body{background:var(--cream);color:var(--ink);font-family:'DM Sans',sans-serif;m
   </div>
 
   <div class="p-content">
+    <!-- ── AI SEARCH BAR ── -->
+    <div class="ai-search-wrap">
+      <div class="ai-search-bar">
+        <div class="ai-search-orb" id="ai-orb" onclick="aiOrbClick()" title="Click to talk to Kam's AI agent">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="23"/>
+            <line x1="8" y1="23" x2="16" y2="23"/>
+          </svg>
+        </div>
+        <input class="ai-search-input" id="ai-search-input" type="text"
+          placeholder="Ask for what you're looking for — try &quot;industrial under $1M in an opportunity zone&quot;"
+          onkeydown="if(event.key==='Enter')aiTextSearch()"/>
+        <button class="ai-search-btn" onclick="aiTextSearch()">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          Search
+        </button>
+      </div>
+      <div class="ai-search-chips">
+        <span class="ai-chip-label">Try:</span>
+        <button class="ai-chip" onclick="aiChipSearch('kam listings for lease')">Kam's listings for lease</button>
+        <button class="ai-chip" onclick="aiChipSearch('retail under $1M')">retail under $1M</button>
+        <button class="ai-chip" onclick="aiChipSearch('opportunity zone')">opportunity zone</button>
+        <button class="ai-chip" onclick="aiChipSearch('industrial over 5000 sqft')">industrial over 5000 sqft</button>
+        <button class="ai-chip" onclick="aiChipSearch('for sale or lease in an opportunity zone')">for sale or lease in an opportunity zone</button>
+      </div>
+      <div class="ai-active-chips" id="ai-active-chips" style="display:none"></div>
+    </div>
+
+    <!-- ElevenLabs voice widget — hidden, triggered by orb -->
+    <elevenlabs-convai id="el-widget" agent-id="YOUR_AGENT_ID"></elevenlabs-convai>
+
+
     <div class="results-meta" id="results-meta"></div>
     <div class="property-grid" id="prop-grid"></div>
   </div>
@@ -739,6 +847,7 @@ function renderGrid() {
   } else {
     list = LISTINGS;
   }
+  if(window._voiceFilter) list = list.filter(window._voiceFilter);
   const count = list.length;
   if(!count){
     meta.innerHTML='';
@@ -893,6 +1002,259 @@ document.addEventListener('click', function(e) {
 });
 
 init();
+
+
+// ══════════════════════════════════════════════════════════
+//  AI SEARCH BAR — text search + ElevenLabs voice agent
+// ══════════════════════════════════════════════════════════
+
+window._voiceFilter = null;
+
+function aiTextSearch() {
+  const q = document.getElementById('ai-search-input').value.trim().toLowerCase();
+  if (!q) { aiClearSearch(); return; }
+  applyAiFilter(q);
+}
+
+function aiChipSearch(q) {
+  document.getElementById('ai-search-input').value = q;
+  applyAiFilter(q.toLowerCase());
+}
+
+function applyAiFilter(q) {
+  window._voiceFilter = p => {
+    // ── Synonym / natural language expansion ──────────────
+    if (/cheap|affordable|budget|inexpensive|low.?cost/.test(q)) {
+      const num = parseFloat((p.price||'').replace(/[^0-9.]/g,'')) || 0;
+      if (num && num > 500000) return false;
+    }
+    if (/expensive|premium|luxury|high.?end|top.?tier/.test(q)) {
+      const num = parseFloat((p.price||'').replace(/[^0-9.]/g,'')) || 0;
+      if (num && num < 1000000) return false;
+    }
+    if (/\bbig\b|large|spacious|huge|massive|sizable/.test(q)) {
+      const sq = parseInt((p.sqft||'').replace(/[^0-9]/g,'')) || 0;
+      if (sq && sq < 5000) return false;
+    }
+    if (/\bsmall\b|tiny|compact|little/.test(q)) {
+      const sq = parseInt((p.sqft||'').replace(/[^0-9]/g,'')) || 0;
+      if (sq && sq > 3000) return false;
+    }
+    if (/investment|income.?producing|cap rate|nnn|net lease|roi/.test(q)) {
+      if (!p.capRate) return false;
+    }
+    if (/vacant|empty|available now|move.?in ready|turn.?key/.test(q)) {
+      if (!(p.notes||'').toLowerCase().includes('vacant') &&
+          !(p.notes||'').toLowerCase().includes('available')) return false;
+    }
+    if (/fenced|gated|secure/.test(q)) {
+      if (!(p.notes||'').toLowerCase().includes('fenced') &&
+          !(p.notes||'').toLowerCase().includes('gate')) return false;
+    }
+    if (/drive.?in|loading dock|dock door|roll.?up/.test(q)) {
+      if (!(p.notes||'').toLowerCase().includes('door') &&
+          !(p.notes||'').toLowerCase().includes('dock')) return false;
+    }
+    if (/multi.?tenant|multi.?unit/.test(q)) {
+      if (!(p.notes||'').toLowerCase().includes('multi')) return false;
+    }
+    if (/single.?tenant|single.?occupan/.test(q)) {
+      if (!(p.notes||'').toLowerCase().includes('single')) return false;
+    }
+    if (/south side|south tucson|\bsouth\b/.test(q)) {
+      if (!(p.address1||'').toLowerCase().includes(' s ') &&
+          !(p.address1||'').toLowerCase().startsWith('s ') &&
+          !/ s[0-9]/.test((p.address1||'').toLowerCase())) return false;
+    }
+    if (/downtown/.test(q)) {
+      const downtown = ['85701','85705','85719','85745'];
+      if (!downtown.some(z => (p.address2||'').includes(z))) return false;
+    }
+    if (/car wash|automotive|auto shop/.test(q)) {
+      if (!(p.type||'').toLowerCase().includes('special') &&
+          !(p.notes||'').toLowerCase().includes('car wash') &&
+          !(p.notes||'').toLowerCase().includes('auto')) return false;
+    }
+    if (/\bacres?\b|acreage/.test(q)) {
+      if (!(p.type||'').toLowerCase().includes('land') &&
+          !(p.notes||'').toLowerCase().includes('ac')) return false;
+    }
+    const convPrice = q.match(/([a-z]+)\s+(?:point\s+([a-z]+)\s+)?million/i);
+    if (convPrice) {
+      const words = {one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,half:0.5,quarter:0.25};
+      let val = words[(convPrice[1]||'').toLowerCase()] || 0;
+      if (convPrice[2]) val += (words[(convPrice[2]||'').toLowerCase()] || 0) * 0.1;
+      if (val) {
+        const capM = val * 1000000;
+        const num = parseFloat((p.price||'').replace(/[^0-9.]/g,'')) || 0;
+        if (q.includes('under') && num && num > capM) return false;
+        if (q.includes('over') && num && num < capM) return false;
+      }
+    }
+    const convSqft = q.match(/([a-z]+)\s+thousand\s+(?:square\s+feet|sqft|sf)/i);
+    if (convSqft) {
+      const words = {one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10};
+      const val = (words[(convSqft[1]||'').toLowerCase()] || 0) * 1000;
+      if (val) {
+        const sq = parseInt((p.sqft||'').replace(/[^0-9]/g,'')) || 0;
+        if ((q.includes('over')||q.includes('minimum')||q.includes('at least')) && sq && sq < val) return false;
+        if ((q.includes('under')||q.includes('maximum')) && sq && sq > val) return false;
+      }
+    }
+
+    // ── Original keyword matching ──────────────────────────
+    if (q.includes('opportunity zone') && !p.opportunityZone) return false;
+    if ((q.includes("kam's") || q.includes('kam listings') || q.includes('kam only')) && !p.kamListing) return false;
+
+    // price ceiling
+    const underMatch = q.match(/under\s*\$?([0-9.,]+)\s*(m|k)?/i);
+    if (underMatch) {
+      let cap = parseFloat(underMatch[1].replace(/,/g,''));
+      const unit = (underMatch[2]||'').toLowerCase();
+      if (unit === 'm') cap *= 1000000;
+      else if (unit === 'k') cap *= 1000;
+      const num = parseFloat((p.price||'').replace(/[^0-9.]/g,'')) || 0;
+      if (num && cap >= 1000 && num > cap) return false;
+      if (num && cap < 1000 && num > cap * 1000000) return false;
+    }
+
+    // price floor
+    const overPriceMatch = q.match(/over\s*\$?([0-9.,]+)\s*(m|k)?(?!\s*sqft)/i);
+    if (overPriceMatch) {
+      let floor = parseFloat(overPriceMatch[1].replace(/,/g,''));
+      const unit = (overPriceMatch[2]||'').toLowerCase();
+      if (unit === 'm') floor *= 1000000;
+      else if (unit === 'k') floor *= 1000;
+      const num = parseFloat((p.price||'').replace(/[^0-9.]/g,'')) || 0;
+      if (num && floor >= 1000 && num < floor) return false;
+    }
+
+    // sqft floor
+    const sqftMatch = q.match(/over\s*([0-9,]+)\s*sqft/i);
+    if (sqftMatch) {
+      const minSq = parseInt(sqftMatch[1].replace(/,/g,''));
+      const sq = parseInt((p.sqft||'').replace(/[^0-9]/g,'')) || 0;
+      if (sq && sq < minSq) return false;
+    }
+
+    // listing type
+    if (q.includes('for lease') && p.listingType !== 'For Lease' && p.listingType !== 'For Sale or Lease') return false;
+    if (q.includes('for sale') && !q.includes('for sale or lease') && p.listingType !== 'For Sale' && p.listingType !== 'For Sale or Lease') return false;
+    if (q.includes('sale or lease') && p.listingType !== 'For Sale or Lease') return false;
+
+    // property type
+    const typeKws = ['industrial','retail','office','land','warehouse','manufacturing'];
+    for (const kw of typeKws) {
+      if (q.includes(kw) && !(p.type||'').toLowerCase().includes(kw)) return false;
+    }
+
+    return true;
+  };
+
+  const chipsEl = document.getElementById('ai-active-chips');
+  chipsEl.style.display = 'flex';
+  chipsEl.innerHTML = '<span class="ai-active-chip">' + document.getElementById('ai-search-input').value + '</span>'
+    + '<button class="ai-clear-btn" onclick="aiClearSearch()">\u2715 Clear</button>';
+  renderGrid();
+}
+
+function aiClearSearch() {
+  window._voiceFilter = null;
+  document.getElementById('ai-search-input').value = '';
+  document.getElementById('ai-active-chips').style.display = 'none';
+  document.getElementById('ai-active-chips').innerHTML = '';
+  renderGrid();
+}
+
+function aiOrbClick() {
+  const widget = document.getElementById('el-widget');
+  const agentId = widget ? widget.getAttribute('agent-id') : null;
+  if (!agentId || agentId === 'YOUR_AGENT_ID') {
+    const orb = document.getElementById('ai-orb');
+    orb.classList.add('listening');
+    setTimeout(() => orb.classList.remove('listening'), 1200);
+    return;
+  }
+  try {
+    widget.click();
+    if (widget.shadowRoot) {
+      const btn = widget.shadowRoot.querySelector('button');
+      if (btn) btn.click();
+    }
+    document.getElementById('ai-orb').classList.add('listening');
+  } catch(e) {}
+}
+
+const AI_CLIENT_TOOLS = {
+  filterProperties: ({ listingType, propertyType, maxPriceM, minPriceM, opportunityZone, kamOnly, minSqft }) => {
+    const chips = [];
+    window._voiceFilter = p => {
+      if (listingType && listingType !== 'any' && !p.listingType.toLowerCase().includes(listingType.toLowerCase())) return false;
+      if (propertyType && propertyType !== 'any' && !(p.type||'').toLowerCase().includes(propertyType.toLowerCase())) return false;
+      const numPrice = parseFloat((p.price||'').replace(/[^0-9.]/g,'')) || 0;
+      if (maxPriceM && numPrice && numPrice > maxPriceM * 1000000) return false;
+      if (minPriceM && numPrice && numPrice < minPriceM * 1000000) return false;
+      if (opportunityZone === true && !p.opportunityZone) return false;
+      if (kamOnly === true && !p.kamListing) return false;
+      const numSqft = parseInt((p.sqft||'').replace(/[^0-9]/g,'')) || 0;
+      if (minSqft && numSqft && numSqft < minSqft) return false;
+      return true;
+    };
+    if (listingType && listingType !== 'any') chips.push(listingType);
+    if (propertyType && propertyType !== 'any') chips.push(propertyType.charAt(0).toUpperCase() + propertyType.slice(1));
+    if (maxPriceM) chips.push('Under $' + maxPriceM + 'M');
+    if (minPriceM) chips.push('Over $' + minPriceM + 'M');
+    if (opportunityZone) chips.push('Opportunity Zone');
+    if (kamOnly) chips.push("Kam's Listings");
+    if (minSqft) chips.push('Over ' + minSqft.toLocaleString() + ' sqft');
+    renderGrid();
+    const count = document.querySelectorAll('#prop-grid .card').length;
+    const chipsEl = document.getElementById('ai-active-chips');
+    chipsEl.style.display = 'flex';
+    chipsEl.innerHTML = chips.map(c => '<span class="ai-active-chip">' + c + '</span>').join('')
+      + '<button class="ai-clear-btn" onclick="aiClearSearch()">\u2715 Clear</button>';
+    return 'Filtered to ' + count + ' properties. Grid updated.';
+  },
+  getListings: ({ filterKam }) => {
+    const list = filterKam ? LISTINGS.filter(p => p.kamListing) : LISTINGS;
+    return JSON.stringify(list.map(p => ({
+      id: p.id, address: p.address1 + ', ' + p.address2,
+      type: p.type, listingType: p.listingType, price: p.price,
+      sqft: p.sqft, opportunityZone: p.opportunityZone,
+      kamListing: !!p.kamListing, notes: p.notes
+    })));
+  },
+  highlightProperty: ({ propertyId }) => {
+    const cards = document.querySelectorAll('.card');
+    cards.forEach(c => c.style.outline = '');
+    const target = document.querySelector('.card[data-id="' + propertyId + '"]');
+    if (target) {
+      target.style.outline = '3px solid var(--gold)';
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => { target.style.outline = ''; }, 4000);
+      return 'Property highlighted.';
+    }
+    return 'Property not found.';
+  },
+  clearFilters: () => { aiClearSearch(); return 'Filters cleared.'; }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  const widget = document.getElementById('el-widget');
+  if (!widget) return;
+  widget.addEventListener('elevenlabs-convai:call', event => {
+    event.detail.config.clientTools = AI_CLIENT_TOOLS;
+  });
+  widget.addEventListener('elevenlabs-convai:status', event => {
+    const orb = document.getElementById('ai-orb');
+    if (!orb) return;
+    const s = event.detail?.status;
+    orb.classList.remove('listening');
+    if (s === 'listening' || s === 'speaking') orb.classList.add('listening');
+  });
+});
+
 </script>
+<script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
 </body>
 </html>
