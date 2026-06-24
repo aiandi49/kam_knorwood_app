@@ -656,10 +656,55 @@ async function submitIWant() {
   const btn = document.querySelector('#iwant-form button');
   btn.disabled=true;btn.textContent='Sending…';
   const listing = LISTINGS.find(p=>p.id===_iwPropId)||{};
+
+  // 1. Save to Supabase
   await db.from('client_interests').insert({
     user_id:user.id, client_name:name, client_email:email,
     listing_id:_iwPropId, address:listing.address1||'', price:listing.price||''
   });
+
+  const propLine = (listing.address1||'Property') + ' — ' + (listing.price||'Price Not Disclosed');
+
+  // 2. Notify Kam via email
+  await fetch('/api/send-email', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      to: 'knorwood@picor.com',
+      subject: '⚡ I Want This: ' + (listing.address1||'a property'),
+      text: name + ' is interested in a property.\n\nProperty: ' + propLine + '\nClient: ' + name + '\nEmail: ' + email + (phone ? '\nPhone: ' + phone : '') + '\n\nLog in to your portal to follow up.'
+    })
+  }).catch(()=>{});
+
+  // 3. Send client confirmation email
+  await fetch('/api/send-email', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      to: email,
+      subject: 'Got it! Kam will be in touch about ' + (listing.address1||'your property'),
+      text: 'Hi ' + name + ',\n\nKam Norwood has been notified of your interest in:\n' + propLine + '\n\nHe’ll be reaching out shortly. In the meantime, feel free to call him directly at (520) 360-8510.\n\n— Kam Norwood CRE\nkam@knorwoodcre.com'
+    })
+  }).catch(()=>{});
+
+  // 4. Notify Kam via SMS (Twilio campaign approval pending)
+  await fetch('/api/send-sms', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      to: '+15203608510',
+      message: '⚡ I Want This!\n' + name + ' is interested in ' + (listing.address1||'a property') + ' (' + (listing.price||'Price TBD') + ').\nEmail: ' + email + (phone ? '\nPhone: ' + phone : '')
+    })
+  }).catch(()=>{});
+
+  // 5. SMS to client if they provided a phone number and opted in
+  if(profile && profile.opt_sms && phone) {
+    await fetch('/api/send-sms', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        to: phone,
+        message: 'Hi ' + name + '! Kam Norwood received your interest in ' + (listing.address1||'the property') + '. He’ll be in touch soon. Questions? Call (520) 360-8510.'
+      })
+    }).catch(()=>{});
+  }
+
   btn.disabled=false;btn.textContent='⚡ Send to Kam';
   document.getElementById('iwant-form').style.display='none';
   document.getElementById('iwant-result').style.display='block';
