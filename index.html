@@ -1355,7 +1355,6 @@ function renderListings() {
   const filtered = LISTINGS.filter(p => {
     if (_activeTab === 'kam') return p.kamListing === true;
     if (_activeTab === 'For Review') return p.forReview === true;
-    if (p.forReview) return false; // locked to For Review only
     if (_activeTab === 'all') return true;
     return p.listingType === _activeTab;
   });
