@@ -1267,7 +1267,7 @@
   </div>
 
   <!-- ElevenLabs voice widget — hidden, triggered by orb click -->
-  <elevenlabs-convai id="el-widget" agent-id="YOUR_AGENT_ID"></elevenlabs-convai>
+  <elevenlabs-convai id="el-widget" agent-id="agent_9701kwnd4c7fwtraaqhfsqnszbd"></elevenlabs-convai>
 
 
   <div class="results-meta" id="results-count"></div>
@@ -2665,7 +2665,7 @@ function aiClearSearch() {
 function aiOrbClick() {
   const widget = document.getElementById('el-widget');
   const agentId = widget ? widget.getAttribute('agent-id') : null;
-  if (!agentId || agentId === 'YOUR_AGENT_ID') {
+  if (!agentId || agentId === 'agent_9701kwnd4c7fwtraaqhfsqnszbd') {
     // Not yet configured — show friendly note
     const orb = document.getElementById('ai-orb');
     orb.classList.add('listening');
