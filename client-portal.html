@@ -681,7 +681,7 @@ async function submitIWant() {
     body: JSON.stringify({
       to: email,
       subject: 'Got it! Kam will be in touch about ' + (listing.address1||'your property'),
-      text: 'Hi ' + name + ',\n\nKam Norwood has been notified of your interest in:\n' + propLine + '\n\nHe’ll be reaching out shortly. In the meantime, feel free to call him directly at (520) 360-8510.\n\n— Kam Norwood CRE\nkam@knorwoodcre.com'
+      text: "Hi " + name + ",\n\nKam Norwood has been notified of your interest in:\n" + propLine + "\n\nHe'll be reaching out shortly. In the meantime, feel free to call him directly at (520) 360-8510.\n\n— Kam Norwood CRE\nkam@knorwoodcre.com" 
     })
   }).catch(()=>{});
 
@@ -700,7 +700,7 @@ async function submitIWant() {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
         to: phone,
-        message: 'Hi ' + name + '! Kam Norwood received your interest in ' + (listing.address1||'the property') + '. He’ll be in touch soon. Questions? Call (520) 360-8510.'
+        message: "Hi " + name + "! Kam Norwood received your interest in " + (listing.address1||"the property") + ". He'll be in touch soon. Questions? Call (520) 360-8510." 
       })
     }).catch(()=>{});
   }
