@@ -1239,7 +1239,7 @@
   <!-- ── AI SEARCH BAR ── -->
   <div class="ai-search-wrap">
     <div class="ai-search-bar">
-      <div class="ai-search-orb" id="ai-orb" onclick="aiOrbClick()" title="Click to talk to Kam\'s AI agent">
+      <div class="ai-search-orb" id="ai-orb" onclick="aiOrbClick()" title="Click to talk to Kam's AI agent">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
           <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
@@ -1248,7 +1248,7 @@
         </svg>
       </div>
       <input class="ai-search-input" id="ai-search-input" type="text"
-        placeholder="Ask for what you\'re looking for — try \"industrial under $1M in an opportunity zone\""
+        placeholder="Ask for what you're looking for — try: industrial under $1M, opportunity zone, Kam's listings"
         onkeydown="if(event.key==='Enter')aiTextSearch()"/>
       <button class="ai-search-btn" onclick="aiTextSearch()">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
@@ -1257,11 +1257,11 @@
     </div>
     <div class="ai-search-chips">
       <span class="ai-chip-label">Try:</span>
-      <button class="ai-chip" onclick="aiChipSearch(\'kam listings for lease\')">Kam\'s listings for lease</button>
-      <button class="ai-chip" onclick="aiChipSearch(\'retail under $1M\')">retail under $1M</button>
-      <button class="ai-chip" onclick="aiChipSearch(\'opportunity zone\')">opportunity zone</button>
-      <button class="ai-chip" onclick="aiChipSearch(\'industrial over 5000 sqft\')">industrial over 5000 sqft</button>
-      <button class="ai-chip" onclick="aiChipSearch(\'for sale or lease in an opportunity zone\')">for sale or lease in an opportunity zone</button>
+      <button class="ai-chip" onclick="aiChipSearch('kam listings for lease')">Kam's listings for lease</button>
+      <button class="ai-chip" onclick="aiChipSearch('retail under $1M')">retail under $1M</button>
+      <button class="ai-chip" onclick="aiChipSearch('opportunity zone')">opportunity zone</button>
+      <button class="ai-chip" onclick="aiChipSearch('industrial over 5000 sqft')">industrial over 5000 sqft</button>
+      <button class="ai-chip" onclick="aiChipSearch('for sale or lease in an opportunity zone')">for sale or lease in an opportunity zone</button>
     </div>
     <div class="ai-active-chips" id="ai-active-chips" style="display:none"></div>
   </div>
