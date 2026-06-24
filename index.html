@@ -2663,23 +2663,30 @@ function aiClearSearch() {
 
 // ── Orb click — triggers ElevenLabs voice agent ──────────
 function aiOrbClick() {
-  const widget = document.getElementById('el-widget');
-  const agentId = widget ? widget.getAttribute('agent-id') : null;
-  if (!agentId || agentId === 'agent_9701kwnd4c7fwtraaqhfsqnszbd') {
-    // Not yet configured — show friendly note
-    const orb = document.getElementById('ai-orb');
-    orb.classList.add('listening');
-    setTimeout(() => orb.classList.remove('listening'), 1200);
-    return;
-  }
+  const orb = document.getElementById('ai-orb');
+  orb.classList.add('listening');
+
+  // Try to start ElevenLabs conversation directly via SDK
   try {
-    widget.click();
-    if (widget.shadowRoot) {
+    const widget = document.getElementById('el-widget');
+    // Try shadow DOM button first
+    if (widget && widget.shadowRoot) {
       const btn = widget.shadowRoot.querySelector('button');
-      if (btn) btn.click();
+      if (btn) { btn.click(); return; }
     }
-    document.getElementById('ai-orb').classList.add('listening');
-  } catch(e) {}
+    // Try dispatching a start event
+    if (widget) {
+      widget.dispatchEvent(new CustomEvent('start-call', { bubbles: true }));
+    }
+    // Fallback — use ElevenLabs JS SDK directly
+    if (window.ElevenLabsConvai) {
+      window.ElevenLabsConvai.startConversation({ agentId: 'agent_9701kwnd4c7fwtraaqhfsqnszbd' });
+    }
+  } catch(e) {
+    console.log('Orb click error:', e);
+  }
+
+  setTimeout(() => orb.classList.remove('listening'), 3000);
 }
 
 // ── Client tools the ElevenLabs agent can call ───────────
